@@ -254,4 +254,145 @@ func main() {
 		savedCustomer.Email,
 	)
 
+	fmt.Println()
+	fmt.Println(">>> Criação de Pedido")
+
+	order := domain.NewOrder(
+		"PED-001",
+		customer.ID,
+	)
+
+	err = order.AddItem(
+		*domain.NewOrderItem(
+			"P001",
+			"",
+			0,
+			1,
+		),
+	)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	err = order.AddItem(
+		*domain.NewOrderItem(
+			"P002",
+			"",
+			0,
+			2,
+		),
+	)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if err := createOrder.Execute(order); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("Pedido criado com sucesso.")
+
+	fmt.Println()
+
+	savedOrder, err := getOrder.Execute("PED-001")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Printf("Pedido........: %s\n", savedOrder.ID)
+	fmt.Printf("Cliente.......: %s\n", savedOrder.CustomerID)
+	fmt.Printf("Status........: %s\n", savedOrder.Status)
+	fmt.Printf("Itens.........: %d\n", len(savedOrder.Items))
+	fmt.Printf("Total.........: %.2f\n", savedOrder.Total())
+
+	fmt.Println()
+	fmt.Println(">>> Estoque após pedido")
+
+	products, _ = listProducts.Execute()
+
+	for _, product := range products {
+
+		fmt.Printf(
+			"%s - Estoque: %d\n",
+			product.Name,
+			product.Stock,
+		)
+	}
+
+	fmt.Println()
+	fmt.Println(">>> Pagamento")
+
+	if err := payOrder.Execute(order.ID); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	savedOrder, _ = getOrder.Execute(order.ID)
+
+	fmt.Printf("Novo status: %s\n", savedOrder.Status)
+
+	fmt.Println()
+	fmt.Println(">>> Cancelando pedido pago")
+
+	if err := cancelOrder.Execute(order.ID); err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println()
+	fmt.Println(">>> Pedido com estoque insuficiente")
+
+	order2 := domain.NewOrder(
+		"PED-002",
+		customer.ID,
+	)
+
+	order2.AddItem(
+		*domain.NewOrderItem(
+			"P001",
+			"",
+			0,
+			100,
+		),
+	)
+
+	if err := createOrder.Execute(order2); err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println()
+	fmt.Println(">>> Pedido vazio")
+
+	order3 := domain.NewOrder(
+		"PED-003",
+		customer.ID,
+	)
+
+	if err := createOrder.Execute(order3); err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println()
+	fmt.Println(">>> Cliente inválido")
+
+	order4 := domain.NewOrder(
+		"PED-004",
+		"",
+	)
+
+	order4.AddItem(
+		*domain.NewOrderItem(
+			"P002",
+			"",
+			0,
+			1,
+		),
+	)
+
+	if err := createOrder.Execute(order4); err != nil {
+		fmt.Println(err)
+	}
 }
