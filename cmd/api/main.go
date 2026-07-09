@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"desafio-go/config"
+
 	"desafio-go/infrastructure/repository/memory"
 
 	"desafio-go/internal/domain"
@@ -13,6 +15,11 @@ import (
 )
 
 func main() {
+
+	cfg := config.Load()
+
+	fmt.Println(cfg.AppName)
+	fmt.Println(cfg.DatabaseURL)
 
 	fmt.Println("      SERVIÇO DE PEDIDOS")
 
