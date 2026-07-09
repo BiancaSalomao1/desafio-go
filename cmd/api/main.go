@@ -34,19 +34,23 @@ func main() {
 	_ = listProducts
 
 	// Customer UseCases
-
 	createCustomer := customerusecase.NewCreateCustomerUseCase(customerRepository)
 	getCustomer := customerusecase.NewGetCustomerUseCase(customerRepository)
+	listCustomers := customerusecase.NewListCustomersUseCase(customerRepository)
 
 	_ = createCustomer
 	_ = getCustomer
+	_ = listCustomers
 
 	// User UseCases
 
 	createUser := userusecase.NewCreateUserUseCase(userRepository)
+	getUser := userusecase.NewGetUserUseCase(userRepository)
+	listUsers := userusecase.NewListUsersUseCase(userRepository)
 
 	_ = createUser
-
+	_ = getUser
+	_ = listUsers
 	// Order UseCases
 
 	createOrder := orderusecase.NewCreateOrderUseCase(
@@ -143,6 +147,111 @@ func main() {
 		product.Name,
 		product.Price,
 		product.Stock,
+	)
+
+	// Cadastro de Usuário
+
+	fmt.Println()
+	fmt.Println(">>> Cadastro de Usuário")
+
+	user := domain.NewUser(
+		"U001",
+		"Administrador",
+		"admin@email.com",
+		"123456",
+	)
+
+	if err := createUser.Execute(user); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("Usuário cadastrado com sucesso.")
+
+	fmt.Println()
+	fmt.Println(">>> Lista de Usuários")
+
+	users, err := listUsers.Execute()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	for _, user := range users {
+
+		fmt.Printf(
+			"ID: %-5s Nome: %-15s Email: %s\n",
+			user.ID,
+			user.Name,
+			user.Email,
+		)
+	}
+	fmt.Println()
+	fmt.Println(">>> Buscar Usuário")
+
+	savedUser, err := getUser.Execute("U001")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Printf(
+		"Usuário: %s | %s\n",
+		savedUser.Name,
+		savedUser.Email,
+	)
+
+	//----------------------------------
+	// Cadastro de Cliente
+	//----------------------------------
+
+	fmt.Println()
+	fmt.Println(">>> Cadastro de Cliente")
+
+	customer := domain.NewCustomer(
+		"C001",
+		"Ana",
+		"ana@email.com",
+	)
+
+	if err := createCustomer.Execute(customer); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("Cliente cadastrado com sucesso.")
+
+	fmt.Println()
+	fmt.Println(">>> Lista de Clientes")
+
+	customers, err := listCustomers.Execute()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	for _, customer := range customers {
+
+		fmt.Printf(
+			"ID: %-5s Nome: %-10s Email: %s\n",
+			customer.ID,
+			customer.Name,
+			customer.Email,
+		)
+	}
+	fmt.Println()
+	fmt.Println(">>> Buscar Cliente")
+
+	savedCustomer, err := getCustomer.Execute("C001")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Printf(
+		"Cliente: %s | %s\n",
+		savedCustomer.Name,
+		savedCustomer.Email,
 	)
 
 }
