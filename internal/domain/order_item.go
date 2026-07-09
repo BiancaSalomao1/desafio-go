@@ -31,16 +31,13 @@ func NewOrderItem(productID, name string, price float64, quantity int) *OrderIte
 }
 
 func (i *OrderItem) Validate() error {
+
 	if i.ProductID == "" {
 		return ErrProductInvalid
 	}
 
 	if i.Quantity <= 0 {
 		return ErrInvalidQuantity
-	}
-
-	if i.Price <= 0 {
-		return ErrProductInvalid
 	}
 
 	return nil
