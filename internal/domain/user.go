@@ -32,15 +32,15 @@ func NewUser(id, name, email, passwordHash string) *User {
 
 func (u *User) Validate() error {
 	if u.Name == "" {
-		return ErrUserNotFound
+		return ErrUserNameRequired
 	}
 
 	if u.Email == "" {
-		return ErrUserNotFound
+		return ErrUserEmailRequired
 	}
 
 	if u.PasswordHash == "" {
-		return ErrUserNotFound
+		return ErrPasswordRequired
 	}
 
 	return nil

@@ -42,4 +42,8 @@ var (
 	ErrProductNameRequired = errors.New("product name is required")
 	ErrInvalidPrice        = errors.New("invalid price")
 	ErrInvalidStock        = errors.New("invalid stock")
+
+	ErrUserNameRequired  = errors.New("user name required")
+	ErrUserEmailRequired = errors.New("user email required")
+	ErrPasswordRequired  = errors.New("password required")
 )
