@@ -4,7 +4,6 @@ package product
 struct ProductResponse
 
 Responsabilidades:
-
 - retornar os dados de um produto.
 
 Campos:
@@ -12,6 +11,7 @@ Campos:
 - name
 - price
 - stock
+
 */
 
 type ProductResponse struct {

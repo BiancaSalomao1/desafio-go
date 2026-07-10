@@ -1,0 +1,52 @@
+package mapper
+
+import (
+	"desafio-go/internal/domain"
+	userdto "desafio-go/internal/dto/user"
+
+	"github.com/google/uuid"
+)
+
+func ToUser(
+	request userdto.CreateUserRequest,
+) *domain.User {
+
+	return domain.NewUser(
+		uuid.NewString(),
+		request.Name,
+		request.Email,
+		request.Password,
+	)
+}
+
+func ToUserResponse(
+	user *domain.User,
+) userdto.UserResponse {
+
+	return userdto.UserResponse{
+		ID:    user.ID,
+		Name:  user.Name,
+		Email: user.Email,
+	}
+}
+
+func ToUserResponseList(
+	users []*domain.User,
+) []userdto.UserResponse {
+
+	response := make(
+		[]userdto.UserResponse,
+		0,
+		len(users),
+	)
+
+	for _, user := range users {
+
+		response = append(
+			response,
+			ToUserResponse(user),
+		)
+	}
+
+	return response
+}

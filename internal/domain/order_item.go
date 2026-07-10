@@ -22,9 +22,9 @@ type OrderItem struct {
 	Quantity  int     `json:"quantity"`
 }
 
-func NewOrderItem(id string, productID string, name string, price float64, quantity int) *OrderItem {
+func NewOrderItem(productID string, name string, price float64, quantity int) *OrderItem {
 	return &OrderItem{
-		ID:        id,
+
 		ProductID: productID,
 		Name:      name,
 		Price:     price,

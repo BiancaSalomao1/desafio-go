@@ -4,13 +4,15 @@ package product
 struct CreateProductRequest
 
 Responsabilidades:
-
 - receber os dados para criação de um produto.
 
 Campos:
 - name
 - price
 - stock
+
+Métodos:
+- nenhum
 */
 
 type CreateProductRequest struct {

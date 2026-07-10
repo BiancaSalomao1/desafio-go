@@ -24,6 +24,7 @@ type OrderResponse struct {
 }
 
 type OrderItemResponse struct {
+	ID        string  `json:"id"`
 	ProductID string  `json:"productId"`
 	Name      string  `json:"name"`
 	Price     float64 `json:"price"`
