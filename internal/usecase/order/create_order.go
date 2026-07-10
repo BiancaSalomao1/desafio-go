@@ -17,72 +17,72 @@ Métodos:
 import (
 	"desafio-go/internal/domain"
 	"desafio-go/internal/repository"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type CreateOrderUseCase struct {
-	orderRepository    repository.OrderRepository
-	productRepository  repository.ProductRepository
-	customerRepository repository.CustomerRepository
+	transactionManager repository.TransactionManager
+	repositoryFactory  repository.RepositoryFactory
 }
 
 func NewCreateOrderUseCase(
-	orderRepository repository.OrderRepository,
-	productRepository repository.ProductRepository,
-	customerRepository repository.CustomerRepository,
+	transactionManager repository.TransactionManager,
+	repositoryFactory repository.RepositoryFactory,
 ) *CreateOrderUseCase {
+
 	return &CreateOrderUseCase{
-		orderRepository:    orderRepository,
-		productRepository:  productRepository,
-		customerRepository: customerRepository,
+		transactionManager: transactionManager,
+		repositoryFactory:  repositoryFactory,
 	}
 }
 
 func (uc *CreateOrderUseCase) Execute(order *domain.Order) error {
-	//validações
-	//  pedido
+
 	if err := order.Validate(); err != nil {
 		return err
 	}
 
-	// cliente existe
-	if _, err := uc.customerRepository.FindByID(order.CustomerID); err != nil {
-		return err
-	}
+	return uc.transactionManager.WithinTransaction(func(tx pgx.Tx) error {
 
-	// atualiza apenas uma vez
-	products := make(map[string]*domain.Product)
+		productRepository := uc.repositoryFactory.Product(tx)
+		customerRepository := uc.repositoryFactory.Customer(tx)
+		orderRepository := uc.repositoryFactory.Order(tx)
 
-	// valida produtos e reduz estoque
-	for i := range order.Items {
-
-		product, err := uc.productRepository.FindByID(order.Items[i].ProductID)
-		if err != nil {
+		if _, err := customerRepository.FindByID(order.CustomerID); err != nil {
 			return err
 		}
 
-		if err := product.ReduceStock(order.Items[i].Quantity); err != nil {
+		products := make(map[string]*domain.Product)
+
+		for i := range order.Items {
+
+			product, err := productRepository.FindByID(order.Items[i].ProductID)
+			if err != nil {
+				return err
+			}
+
+			if err := product.ReduceStock(order.Items[i].Quantity); err != nil {
+				return err
+			}
+
+			order.Items[i].Name = product.Name
+			order.Items[i].Price = product.Price
+
+			products[product.ID] = product
+		}
+
+		for _, product := range products {
+
+			if err := productRepository.Update(product); err != nil {
+				return err
+			}
+		}
+
+		if err := orderRepository.Save(order); err != nil {
 			return err
 		}
 
-		// **congela** os dados do produto no momento da compra
-		order.Items[i].Name = product.Name
-		order.Items[i].Price = product.Price
-
-		products[product.ID] = product
-	}
-
-	// atualiza o estoque
-	for _, product := range products {
-
-		if err := uc.productRepository.Update(product); err != nil {
-			return err
-		}
-	}
-
-	// salva
-	if err := uc.orderRepository.Save(order); err != nil {
-		return err
-	}
-
-	return nil
+		return nil
+	})
 }

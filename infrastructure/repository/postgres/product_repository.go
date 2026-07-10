@@ -24,11 +24,7 @@ import (
 
 	"desafio-go/internal/repository"
 
-	"github.com/jackc/pgx/v5/pgxpool"
-
 	"desafio-go/internal/domain"
-
-	"desafio-go/infrastructure/database"
 
 	"errors"
 
@@ -36,12 +32,12 @@ import (
 )
 
 type ProductPostgresRepository struct {
-	db *pgxpool.Pool
+	db repository.DBTX
 }
 
-func NewProductRepository(db *database.Database) repository.ProductRepository {
+func NewProductRepository(db repository.DBTX) repository.ProductRepository {
 	return &ProductPostgresRepository{
-		db: db.Pool,
+		db: db,
 	}
 }
 
