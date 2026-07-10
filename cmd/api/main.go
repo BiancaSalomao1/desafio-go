@@ -3,51 +3,35 @@ package main
 import (
 	"fmt"
 
-	"os"
+	"github.com/google/uuid"
 
 	"desafio-go/config"
-
 	"desafio-go/infrastructure/database"
-
-	"desafio-go/infrastructure/repository/memory"
+	"desafio-go/infrastructure/repository/postgres"
 
 	"desafio-go/internal/domain"
-	customerusecase "desafio-go/internal/usecase/customer"
-	orderusecase "desafio-go/internal/usecase/order"
 	productusecase "desafio-go/internal/usecase/product"
-	userusecase "desafio-go/internal/usecase/user"
-
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
-
-	_ "github.com/lib/pq"
 )
 
 func main() {
+
+	// ==========================================
+	// Configuração
+	// ==========================================
+
 	cfg := config.Load()
 
-	// Apenas para depuração (remova depois)
-	wd, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("Working Directory:", wd)
-
-	files, err := os.ReadDir("migrations")
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("\nArquivos encontrados em migrations:")
-
-	for _, file := range files {
-		fmt.Println("-", file.Name())
-	}
+	// ==========================================
+	// Migrations
+	// ==========================================
 
 	if err := database.RunMigrations(cfg.DatabaseURL); err != nil {
 		panic(err)
 	}
+
+	// ==========================================
+	// Banco de Dados
+	// ==========================================
 
 	db, err := database.New(cfg)
 	if err != nil {
@@ -55,119 +39,84 @@ func main() {
 	}
 	defer db.Close()
 
-	fmt.Println("Conexão com PostgreSQL estabelecida com sucesso!")
-	fmt.Println("      SERVIÇO DE PEDIDOS")
+	fmt.Println("===================================")
+	fmt.Println(" SERVIÇO DE PEDIDOS")
+	fmt.Println("===================================")
+	fmt.Println("Conectado ao PostgreSQL com sucesso.")
 
-	// Repositories
+	// ==========================================
+	// Repository
+	// ==========================================
 
-	productRepository := memory.NewMemoryProductRepository()
-	customerRepository := memory.NewMemoryCustomerRepository()
-	userRepository := memory.NewMemoryUserRepository()
-	orderRepository := memory.NewMemoryOrderRepository()
+	productRepository := postgres.NewProductRepository(db)
 
-	// Product UseCases
+	// ==========================================
+	// Use Cases
+	// ==========================================
 
 	createProduct := productusecase.NewCreateProductUseCase(productRepository)
 	getProduct := productusecase.NewGetProductUseCase(productRepository)
 	listProducts := productusecase.NewListProductsUseCase(productRepository)
 
-	_ = createProduct
-	_ = getProduct
-	_ = listProducts
-
-	// Customer UseCases
-	createCustomer := customerusecase.NewCreateCustomerUseCase(customerRepository)
-	getCustomer := customerusecase.NewGetCustomerUseCase(customerRepository)
-	listCustomers := customerusecase.NewListCustomersUseCase(customerRepository)
-
-	_ = createCustomer
-	_ = getCustomer
-	_ = listCustomers
-
-	// User UseCases
-
-	createUser := userusecase.NewCreateUserUseCase(userRepository)
-	getUser := userusecase.NewGetUserUseCase(userRepository)
-	listUsers := userusecase.NewListUsersUseCase(userRepository)
-
-	_ = createUser
-	_ = getUser
-	_ = listUsers
-	// Order UseCases
-
-	createOrder := orderusecase.NewCreateOrderUseCase(
-		orderRepository,
-		productRepository,
-		customerRepository,
-	)
-
-	getOrder := orderusecase.NewGetOrderUseCase(orderRepository)
-
-	payOrder := orderusecase.NewPayOrderUseCase(orderRepository)
-
-	cancelOrder := orderusecase.NewCancelOrderUseCase(
-		orderRepository,
-		productRepository,
-	)
-
-	_ = createOrder
-	_ = getOrder
-	_ = payOrder
-	_ = cancelOrder
-
-	// Cadastro de Produtos
+	// ==========================================
+	// Cadastro
+	// ==========================================
 
 	fmt.Println()
 	fmt.Println(">>> Cadastro de Produtos")
 
 	notebook := domain.NewProduct(
-		"P001",
+		uuid.NewString(),
 		"Notebook",
 		3500.00,
 		5,
 	)
 
 	mouse := domain.NewProduct(
-		"P002",
+		uuid.NewString(),
 		"Mouse",
 		80.00,
 		10,
 	)
 
 	teclado := domain.NewProduct(
-		"P003",
+		uuid.NewString(),
 		"Teclado",
 		180.00,
 		8,
 	)
 
-	if err := createProduct.Execute(notebook); err != nil {
-		fmt.Println(err)
+	products := []*domain.Product{
+		notebook,
+		mouse,
+		teclado,
+	}
+	for _, product := range products {
+
+		if err := createProduct.Execute(product); err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		fmt.Printf("Produto %s cadastrado.\n", product.Name)
 	}
 
-	if err := createProduct.Execute(mouse); err != nil {
-		fmt.Println(err)
-	}
-
-	if err := createProduct.Execute(teclado); err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println("Produtos cadastrados com sucesso.")
+	// ==========================================
+	// Listagem
+	// ==========================================
 
 	fmt.Println()
 	fmt.Println(">>> Lista de Produtos")
 
-	products, err := listProducts.Execute()
+	list, err := listProducts.Execute()
 	if err != nil {
-		fmt.Println(err)
-		return
+		panic(err)
 	}
 
-	for _, product := range products {
+	for _, product := range list {
 
 		fmt.Printf(
-			"ID: %-5s Nome: %-10s Preço: R$ %7.2f Estoque: %d\n",
+			"ID: %-5s Nome: %-10s Preço: R$ %8.2f Estoque: %d\n",
 			product.ID,
 			product.Name,
 			product.Price,
@@ -175,13 +124,16 @@ func main() {
 		)
 	}
 
+	// ==========================================
+	// Busca
+	// ==========================================
+
 	fmt.Println()
 	fmt.Println(">>> Buscar Produto")
 
-	product, err := getProduct.Execute("P001")
+	product, err := getProduct.Execute(notebook.ID)
 	if err != nil {
-		fmt.Println(err)
-		return
+		panic(err)
 	}
 
 	fmt.Printf(
@@ -191,250 +143,7 @@ func main() {
 		product.Stock,
 	)
 
-	// Cadastro de Usuário
-
 	fmt.Println()
-	fmt.Println(">>> Cadastro de Usuário")
+	fmt.Println("Teste do ProductRepository finalizado com sucesso.")
 
-	user := domain.NewUser(
-		"U001",
-		"Administrador",
-		"admin@email.com",
-		"123456",
-	)
-
-	if err := createUser.Execute(user); err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	fmt.Println("Usuário cadastrado com sucesso.")
-
-	fmt.Println()
-	fmt.Println(">>> Lista de Usuários")
-
-	users, err := listUsers.Execute()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	for _, user := range users {
-
-		fmt.Printf(
-			"ID: %-5s Nome: %-15s Email: %s\n",
-			user.ID,
-			user.Name,
-			user.Email,
-		)
-	}
-	fmt.Println()
-	fmt.Println(">>> Buscar Usuário")
-
-	savedUser, err := getUser.Execute("U001")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	fmt.Printf(
-		"Usuário: %s | %s\n",
-		savedUser.Name,
-		savedUser.Email,
-	)
-
-	//----------------------------------
-	// Cadastro de Cliente
-	//----------------------------------
-
-	fmt.Println()
-	fmt.Println(">>> Cadastro de Cliente")
-
-	customer := domain.NewCustomer(
-		"C001",
-		"Ana",
-		"ana@email.com",
-	)
-
-	if err := createCustomer.Execute(customer); err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	fmt.Println("Cliente cadastrado com sucesso.")
-
-	fmt.Println()
-	fmt.Println(">>> Lista de Clientes")
-
-	customers, err := listCustomers.Execute()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	for _, customer := range customers {
-
-		fmt.Printf(
-			"ID: %-5s Nome: %-10s Email: %s\n",
-			customer.ID,
-			customer.Name,
-			customer.Email,
-		)
-	}
-	fmt.Println()
-	fmt.Println(">>> Buscar Cliente")
-
-	savedCustomer, err := getCustomer.Execute("C001")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	fmt.Printf(
-		"Cliente: %s | %s\n",
-		savedCustomer.Name,
-		savedCustomer.Email,
-	)
-
-	fmt.Println()
-	fmt.Println(">>> Criação de Pedido")
-
-	order := domain.NewOrder(
-		"PED-001",
-		customer.ID,
-	)
-
-	err = order.AddItem(
-		*domain.NewOrderItem(
-			"P001",
-			"",
-			0,
-			1,
-		),
-	)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	err = order.AddItem(
-		*domain.NewOrderItem(
-			"P002",
-			"",
-			0,
-			2,
-		),
-	)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	if err := createOrder.Execute(order); err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	fmt.Println("Pedido criado com sucesso.")
-
-	fmt.Println()
-
-	savedOrder, err := getOrder.Execute("PED-001")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	fmt.Printf("Pedido........: %s\n", savedOrder.ID)
-	fmt.Printf("Cliente.......: %s\n", savedOrder.CustomerID)
-	fmt.Printf("Status........: %s\n", savedOrder.Status)
-	fmt.Printf("Itens.........: %d\n", len(savedOrder.Items))
-	fmt.Printf("Total.........: %.2f\n", savedOrder.Total())
-
-	fmt.Println()
-	fmt.Println(">>> Estoque após pedido")
-
-	products, _ = listProducts.Execute()
-
-	for _, product := range products {
-
-		fmt.Printf(
-			"%s - Estoque: %d\n",
-			product.Name,
-			product.Stock,
-		)
-	}
-
-	fmt.Println()
-	fmt.Println(">>> Pagamento")
-
-	if err := payOrder.Execute(order.ID); err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	savedOrder, _ = getOrder.Execute(order.ID)
-
-	fmt.Printf("Novo status: %s\n", savedOrder.Status)
-
-	fmt.Println()
-	fmt.Println(">>> Cancelando pedido pago")
-
-	if err := cancelOrder.Execute(order.ID); err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println()
-	fmt.Println(">>> Pedido com estoque insuficiente")
-
-	order2 := domain.NewOrder(
-		"PED-002",
-		customer.ID,
-	)
-
-	order2.AddItem(
-		*domain.NewOrderItem(
-			"P001",
-			"",
-			0,
-			100,
-		),
-	)
-
-	if err := createOrder.Execute(order2); err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println()
-	fmt.Println(">>> Pedido vazio")
-
-	order3 := domain.NewOrder(
-		"PED-003",
-		customer.ID,
-	)
-
-	if err := createOrder.Execute(order3); err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println()
-	fmt.Println(">>> Cliente inválido")
-
-	order4 := domain.NewOrder(
-		"PED-004",
-		"",
-	)
-
-	order4.AddItem(
-		*domain.NewOrderItem(
-			"P002",
-			"",
-			0,
-			1,
-		),
-	)
-
-	if err := createOrder.Execute(order4); err != nil {
-		fmt.Println(err)
-	}
 }
