@@ -3,7 +3,11 @@ package main
 import (
 	"fmt"
 
+	"os"
+
 	"desafio-go/config"
+
+	"desafio-go/infrastructure/database"
 
 	"desafio-go/infrastructure/repository/memory"
 
@@ -12,15 +16,46 @@ import (
 	orderusecase "desafio-go/internal/usecase/order"
 	productusecase "desafio-go/internal/usecase/product"
 	userusecase "desafio-go/internal/usecase/user"
+
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
-
 	cfg := config.Load()
 
-	fmt.Println(cfg.AppName)
-	fmt.Println(cfg.DatabaseURL)
+	// Apenas para depuração (remova depois)
+	wd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
 
+	fmt.Println("Working Directory:", wd)
+
+	files, err := os.ReadDir("migrations")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("\nArquivos encontrados em migrations:")
+
+	for _, file := range files {
+		fmt.Println("-", file.Name())
+	}
+
+	if err := database.RunMigrations(cfg.DatabaseURL); err != nil {
+		panic(err)
+	}
+
+	db, err := database.New(cfg)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	fmt.Println("Conexão com PostgreSQL estabelecida com sucesso!")
 	fmt.Println("      SERVIÇO DE PEDIDOS")
 
 	// Repositories
