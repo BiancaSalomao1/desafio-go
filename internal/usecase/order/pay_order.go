@@ -2,22 +2,27 @@ package order
 
 /*
 struct PayOrderUseCase
-- pagar pedido.
+
+Responsabilidades:
+- localizar pedido;
+- alterar status para PAID;
+- salvar alteração.
 
 Métodos:
 - NewPayOrderUseCase()
 - Execute()
 */
 
-import (
-	"desafio-go/internal/repository"
-)
+import "desafio-go/internal/repository"
 
 type PayOrderUseCase struct {
 	orderRepository repository.OrderRepository
 }
 
-func NewPayOrderUseCase(orderRepository repository.OrderRepository) *PayOrderUseCase {
+func NewPayOrderUseCase(
+	orderRepository repository.OrderRepository,
+) *PayOrderUseCase {
+
 	return &PayOrderUseCase{
 		orderRepository: orderRepository,
 	}

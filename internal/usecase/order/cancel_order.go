@@ -2,17 +2,18 @@ package order
 
 /*
 struct CancelOrderUseCase
+
+Responsabilidades:
 - cancelar pedido;
-- devolver estoque.
+- devolver estoque;
+- atualizar pedido.
 
 Métodos:
 - NewCancelOrderUseCase()
 - Execute()
 */
 
-import (
-	"desafio-go/internal/repository"
-)
+import "desafio-go/internal/repository"
 
 type CancelOrderUseCase struct {
 	orderRepository   repository.OrderRepository
@@ -48,9 +49,7 @@ func (uc *CancelOrderUseCase) Execute(id string) error {
 			return err
 		}
 
-		if err := product.IncreaseStock(item.Quantity); err != nil {
-			return err
-		}
+		product.IncreaseStock(item.Quantity)
 
 		if err := uc.productRepository.Update(product); err != nil {
 			return err

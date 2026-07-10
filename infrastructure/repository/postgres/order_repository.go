@@ -27,6 +27,7 @@ import (
 	"desafio-go/internal/repository"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type OrderPostgresRepository struct {
@@ -122,9 +123,175 @@ func (r *OrderPostgresRepository) Delete(id string) error {
 }
 
 func (r *OrderPostgresRepository) FindByID(id string) (*domain.Order, error) {
-	return nil, errors.New("not implemented")
+
+	ctx := context.Background()
+
+	order := &domain.Order{}
+
+	query := `
+		SELECT
+			id,
+			customer_id,
+			status
+		FROM orders
+		WHERE id = $1
+	`
+
+	err := r.db.QueryRow(
+		ctx,
+		query,
+		id,
+	).Scan(
+		&order.ID,
+		&order.CustomerID,
+		&order.Status,
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, domain.ErrOrderNotFound
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	queryItems := `
+		SELECT
+			id,
+			product_id,
+			product_name,
+			product_price,
+			quantity
+		FROM order_items
+		WHERE order_id = $1
+		ORDER BY product_name
+	`
+
+	rows, err := r.db.Query(
+		ctx,
+		queryItems,
+		order.ID,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+
+		item := domain.OrderItem{}
+
+		err := rows.Scan(
+			&item.ID,
+			&item.ProductID,
+			&item.Name,
+			&item.Price,
+			&item.Quantity,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		order.Items = append(order.Items, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return order, nil
 }
 
 func (r *OrderPostgresRepository) FindAll() ([]*domain.Order, error) {
-	return nil, errors.New("not implemented")
+
+	ctx := context.Background()
+
+	query := `
+		SELECT
+			id,
+			customer_id,
+			status
+		FROM orders
+		ORDER BY created_at DESC
+	`
+
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var orders []*domain.Order
+
+	for rows.Next() {
+
+		order := &domain.Order{}
+
+		err := rows.Scan(
+			&order.ID,
+			&order.CustomerID,
+			&order.Status,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		itemQuery := `
+			SELECT
+				id,
+				product_id,
+				product_name,
+				product_price,
+				quantity
+			FROM order_items
+			WHERE order_id = $1
+			ORDER BY product_name
+		`
+
+		itemRows, err := r.db.Query(
+			ctx,
+			itemQuery,
+			order.ID,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		for itemRows.Next() {
+
+			item := domain.OrderItem{}
+
+			err := itemRows.Scan(
+				&item.ID,
+				&item.ProductID,
+				&item.Name,
+				&item.Price,
+				&item.Quantity,
+			)
+			if err != nil {
+				itemRows.Close()
+				return nil, err
+			}
+
+			order.Items = append(order.Items, item)
+		}
+
+		if err := itemRows.Err(); err != nil {
+			itemRows.Close()
+			return nil, err
+		}
+
+		itemRows.Close()
+
+		orders = append(orders, order)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return orders, nil
 }

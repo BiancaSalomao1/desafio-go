@@ -2,6 +2,8 @@ package order
 
 /*
 struct GetOrderUseCase
+
+Responsabilidades:
 - buscar pedido por ID.
 
 Métodos:
@@ -18,12 +20,16 @@ type GetOrderUseCase struct {
 	orderRepository repository.OrderRepository
 }
 
-func NewGetOrderUseCase(orderRepository repository.OrderRepository) *GetOrderUseCase {
+func NewGetOrderUseCase(
+	orderRepository repository.OrderRepository,
+) *GetOrderUseCase {
+
 	return &GetOrderUseCase{
 		orderRepository: orderRepository,
 	}
 }
 
 func (uc *GetOrderUseCase) Execute(id string) (*domain.Order, error) {
+
 	return uc.orderRepository.FindByID(id)
 }
