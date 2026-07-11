@@ -200,9 +200,52 @@ func main() {
 		authHandler,
 	)
 
+	public := http.NewServeMux()
+
+	public.Handle(
+		"/login",
+		router,
+	)
+
+	public.Handle(
+		"/users",
+		router,
+	)
+
+	protected := middleware.Auth(
+		cfg.JWTSecret,
+	)(router)
+
+	root := http.NewServeMux()
+
+	root.Handle(
+		"/login",
+		public,
+	)
+
+	root.Handle(
+		"/users",
+		public,
+	)
+
+	root.Handle(
+		"/products",
+		protected,
+	)
+
+	root.Handle(
+		"/customers",
+		protected,
+	)
+
+	root.Handle(
+		"/orders",
+		protected,
+	)
+
 	httpHandler := middleware.Recovery(
 		middleware.Logger(
-			middleware.CORS(router),
+			middleware.CORS(root),
 		),
 	)
 
