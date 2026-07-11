@@ -2,7 +2,12 @@ package product
 
 /*
 struct UpdateProductUseCase
-- atualizar produto.
+
+Responsabilidades:
+- atualizar um produto.
+
+Campos:
+- productRepository
 
 Métodos:
 - NewUpdateProductUseCase()
@@ -18,17 +23,31 @@ type UpdateProductUseCase struct {
 	productRepository repository.ProductRepository
 }
 
-func NewUpdateProductUseCase(productRepository repository.ProductRepository) *UpdateProductUseCase {
+func NewUpdateProductUseCase(
+	productRepository repository.ProductRepository,
+) *UpdateProductUseCase {
+
 	return &UpdateProductUseCase{
 		productRepository: productRepository,
 	}
 }
 
-func (uc *UpdateProductUseCase) Execute(product *domain.Product) error {
+func (uc *UpdateProductUseCase) Execute(
+	product *domain.Product,
+) error {
 
-	if err := product.Validate(); err != nil {
+	currentProduct, err := uc.productRepository.FindByID(product.ID)
+	if err != nil {
 		return err
 	}
 
-	return uc.productRepository.Update(product)
+	if err := currentProduct.Update(
+		product.Name,
+		product.Price,
+		product.Stock,
+	); err != nil {
+		return err
+	}
+
+	return uc.productRepository.Update(currentProduct)
 }

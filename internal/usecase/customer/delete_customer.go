@@ -2,25 +2,58 @@ package customer
 
 /*
 struct DeleteCustomerUseCase
-- excluir cliente.
+
+Responsabilidades:
+- remover um cliente.
+
+Campos:
+- customerRepository
 
 Métodos:
 - NewDeleteCustomerUseCase()
 - Execute()
 */
 
-import "desafio-go/internal/repository"
+import (
+	"strings"
+
+	"desafio-go/internal/domain"
+	"desafio-go/internal/repository"
+)
 
 type DeleteCustomerUseCase struct {
 	customerRepository repository.CustomerRepository
 }
 
-func NewDeleteCustomerUseCase(customerRepository repository.CustomerRepository) *DeleteCustomerUseCase {
+func NewDeleteCustomerUseCase(
+	customerRepository repository.CustomerRepository,
+) *DeleteCustomerUseCase {
+
 	return &DeleteCustomerUseCase{
 		customerRepository: customerRepository,
 	}
 }
 
-func (uc *DeleteCustomerUseCase) Execute(id string) error {
-	return uc.customerRepository.Delete(id)
+func (uc *DeleteCustomerUseCase) Execute(
+	id string,
+) error {
+
+	if _, err := uc.customerRepository.FindByID(id); err != nil {
+		return err
+	}
+
+	err := uc.customerRepository.Delete(id)
+	if err != nil {
+
+		if strings.Contains(
+			err.Error(),
+			"SQLSTATE 23503",
+		) {
+			return domain.ErrCustomerInUse
+		}
+
+		return err
+	}
+
+	return nil
 }

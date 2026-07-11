@@ -2,7 +2,14 @@ package customer
 
 /*
 struct UpdateCustomerUseCase
-- atualizar cliente.
+
+Responsabilidades:
+- localizar um cliente;
+- atualizar seus dados;
+- persistir a alteração.
+
+Campos:
+- customerRepository
 
 Métodos:
 - NewUpdateCustomerUseCase()
@@ -18,17 +25,30 @@ type UpdateCustomerUseCase struct {
 	customerRepository repository.CustomerRepository
 }
 
-func NewUpdateCustomerUseCase(customerRepository repository.CustomerRepository) *UpdateCustomerUseCase {
+func NewUpdateCustomerUseCase(
+	customerRepository repository.CustomerRepository,
+) *UpdateCustomerUseCase {
+
 	return &UpdateCustomerUseCase{
 		customerRepository: customerRepository,
 	}
 }
 
-func (uc *UpdateCustomerUseCase) Execute(customer *domain.Customer) error {
+func (uc *UpdateCustomerUseCase) Execute(
+	customer *domain.Customer,
+) error {
 
-	if err := customer.Validate(); err != nil {
+	currentCustomer, err := uc.customerRepository.FindByID(customer.ID)
+	if err != nil {
 		return err
 	}
 
-	return uc.customerRepository.Update(customer)
+	if err := currentCustomer.Update(
+		customer.Name,
+		customer.Email,
+	); err != nil {
+		return err
+	}
+
+	return uc.customerRepository.Update(currentCustomer)
 }

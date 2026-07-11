@@ -50,3 +50,16 @@ func ToUserResponseList(
 
 	return response
 }
+
+func ToUserUpdate(
+	id string,
+	request userdto.UpdateUserRequest,
+) *domain.User {
+
+	return domain.NewUser(
+		id,
+		request.Name,
+		request.Email,
+		"",
+	)
+}

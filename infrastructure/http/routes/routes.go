@@ -31,16 +31,20 @@ func NewRouter(
 	mux.HandleFunc("POST /products", productHandler.Create)
 	mux.HandleFunc("GET /products", productHandler.List)
 	mux.HandleFunc("GET /products/{id}", productHandler.GetByID)
+	mux.HandleFunc("PUT /products/{id}", productHandler.Update)
+	mux.HandleFunc("DELETE /products/{id}", productHandler.Delete)
 
 	mux.HandleFunc("POST /customers", customerHandler.Create)
 	mux.HandleFunc("GET /customers", customerHandler.List)
 	mux.HandleFunc("GET /customers/{id}", customerHandler.GetByID)
+	mux.HandleFunc("PUT /customers/{id}", customerHandler.Update)
+	mux.HandleFunc("DELETE /custumers/{id}", customerHandler.Delete)
 
 	mux.HandleFunc("POST /users", userHandler.Create)
 	mux.HandleFunc("GET /users", userHandler.List)
 	mux.HandleFunc("GET /users/{id}", userHandler.GetByID)
-
-	// Orders
+	mux.HandleFunc("PUT /users/{id}", userHandler.Update)
+	mux.HandleFunc("DELETE /users/{id}", userHandler.Delete)
 
 	mux.HandleFunc("POST /orders", orderHandler.Create)
 	mux.HandleFunc("GET /orders", orderHandler.List)

@@ -13,6 +13,7 @@ Métodos:
 - ReduceStock()
 - IncreaseStock()
 - Validate()
+- Update()
 */
 
 type Product struct {
@@ -79,4 +80,17 @@ func (p *Product) IncreaseStock(quantity int) error {
 	p.Stock += quantity
 
 	return nil
+}
+
+func (p *Product) Update(
+	name string,
+	price float64,
+	stock int,
+) error {
+
+	p.Name = name
+	p.Price = price
+	p.Stock = stock
+
+	return p.Validate()
 }

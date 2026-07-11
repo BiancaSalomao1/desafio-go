@@ -1,3 +1,18 @@
+/*
+Função ToCustomerUpdate
+
+Responsabilidades:
+- converter um funções CustomerRequest em Customer.
+
+Métodos:
+- ToCustomer
+- ToUpdatedCustomer
+- ToCustomerResponse
+- ToCustomerResponseList
+- ToCustomerUpdate()
+- ToCustomerDelete()
+*/
+
 package mapper
 
 import (
@@ -60,4 +75,16 @@ func ToCustomerResponseList(
 	}
 
 	return response
+}
+
+func ToCustomerUpdate(
+	id string,
+	request customerdto.UpdateCustomerRequest,
+) *domain.Customer {
+
+	return domain.NewCustomer(
+		id,
+		request.Name,
+		request.Email,
+	)
 }

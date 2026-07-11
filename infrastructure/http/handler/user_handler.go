@@ -13,12 +13,16 @@ Campos:
 - createUserUseCase
 - getUserUseCase
 - listUsersUseCase
+- updateUserUseCase
+- deleteUserUseCase
 
 Métodos:
 - NewUserHandler()
 - Create()
 - GetByID()
 - List()
+- Update()
+- Delete()
 */
 
 import (
@@ -34,18 +38,24 @@ type UserHandler struct {
 	createUserUseCase CreateUserUseCase
 	getUserUseCase    GetUserUseCase
 	listUsersUseCase  ListUsersUseCase
+	updateUserUseCase UpdateUserUseCase
+	deleteUserUseCase DeleteUserUseCase
 }
 
 func NewUserHandler(
 	createUserUseCase CreateUserUseCase,
 	getUserUseCase GetUserUseCase,
 	listUsersUseCase ListUsersUseCase,
+	updateUserUseCase UpdateUserUseCase,
+	deleteUserUseCase DeleteUserUseCase,
 ) *UserHandler {
 
 	return &UserHandler{
 		createUserUseCase: createUserUseCase,
 		getUserUseCase:    getUserUseCase,
 		listUsersUseCase:  listUsersUseCase,
+		updateUserUseCase: updateUserUseCase,
+		deleteUserUseCase: deleteUserUseCase,
 	}
 }
 
@@ -57,22 +67,26 @@ func (h *UserHandler) Create(
 	var request userdto.CreateUserRequest
 
 	if err := httpx.ReadJSON(r, &request); err != nil {
+
 		httpx.WriteError(
 			w,
 			http.StatusBadRequest,
 			err,
 		)
+
 		return
 	}
 
 	user := mapper.ToUser(request)
 
 	if err := h.createUserUseCase.Execute(user); err != nil {
+
 		httpx.WriteError(
 			w,
 			http.StatusBadRequest,
 			err,
 		)
+
 		return
 	}
 
@@ -92,11 +106,13 @@ func (h *UserHandler) GetByID(
 
 	user, err := h.getUserUseCase.Execute(id)
 	if err != nil {
+
 		httpx.WriteError(
 			w,
 			http.StatusNotFound,
 			err,
 		)
+
 		return
 	}
 
@@ -114,11 +130,13 @@ func (h *UserHandler) List(
 
 	users, err := h.listUsersUseCase.Execute()
 	if err != nil {
+
 		httpx.WriteError(
 			w,
 			http.StatusInternalServerError,
 			err,
 		)
+
 		return
 	}
 
@@ -126,5 +144,72 @@ func (h *UserHandler) List(
 		w,
 		http.StatusOK,
 		mapper.ToUserResponseList(users),
+	)
+}
+
+func (h *UserHandler) Update(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+
+	id := r.PathValue("id")
+
+	var request userdto.UpdateUserRequest
+
+	if err := httpx.ReadJSON(r, &request); err != nil {
+
+		httpx.WriteError(
+			w,
+			http.StatusBadRequest,
+			err,
+		)
+
+		return
+	}
+
+	user := mapper.ToUserUpdate(
+		id,
+		request,
+	)
+
+	if err := h.updateUserUseCase.Execute(user); err != nil {
+
+		httpx.WriteError(
+			w,
+			http.StatusBadRequest,
+			err,
+		)
+
+		return
+	}
+
+	httpx.WriteJSON(
+		w,
+		http.StatusOK,
+		mapper.ToUserResponse(user),
+	)
+}
+
+func (h *UserHandler) Delete(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+
+	id := r.PathValue("id")
+
+	if err := h.deleteUserUseCase.Execute(id); err != nil {
+
+		httpx.WriteError(
+			w,
+			http.StatusBadRequest,
+			err,
+		)
+
+		return
+	}
+
+	httpx.WriteStatus(
+		w,
+		http.StatusNoContent,
 	)
 }

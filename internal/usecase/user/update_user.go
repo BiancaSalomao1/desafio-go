@@ -2,7 +2,14 @@ package user
 
 /*
 struct UpdateUserUseCase
-- atualizar usuário.
+
+Responsabilidades:
+- localizar um usuário;
+- atualizar seus dados;
+- persistir a alteração.
+
+Campos:
+- userRepository
 
 Métodos:
 - NewUpdateUserUseCase()
@@ -18,17 +25,30 @@ type UpdateUserUseCase struct {
 	userRepository repository.UserRepository
 }
 
-func NewUpdateUserUseCase(userRepository repository.UserRepository) *UpdateUserUseCase {
+func NewUpdateUserUseCase(
+	userRepository repository.UserRepository,
+) *UpdateUserUseCase {
+
 	return &UpdateUserUseCase{
 		userRepository: userRepository,
 	}
 }
 
-func (uc *UpdateUserUseCase) Execute(user *domain.User) error {
+func (uc *UpdateUserUseCase) Execute(
+	user *domain.User,
+) error {
 
-	if err := user.Validate(); err != nil {
+	currentUser, err := uc.userRepository.FindByID(user.ID)
+	if err != nil {
 		return err
 	}
 
-	return uc.userRepository.Update(user)
+	if err := currentUser.Update(
+		user.Name,
+		user.Email,
+	); err != nil {
+		return err
+	}
+
+	return uc.userRepository.Update(currentUser)
 }

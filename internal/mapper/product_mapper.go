@@ -61,3 +61,16 @@ func ToProductResponseList(
 
 	return response
 }
+
+func ToProductUpdate(
+	id string,
+	request productdto.UpdateProductRequest,
+) *domain.Product {
+
+	return domain.NewProduct(
+		id,
+		request.Name,
+		request.Price,
+		request.Stock,
+	)
+}

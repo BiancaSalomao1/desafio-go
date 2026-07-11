@@ -6,10 +6,13 @@ struct Customer
 - identificar o cliente;
 - armazenar nome;
 - armazenar e-mail.
+- atualizar os dados do cliente;
+- validar as informações.
 
 Métodos:
 - construtor NewCustomer()
 - Validate()
+- Update()
 */
 
 type Customer struct {
@@ -36,4 +39,15 @@ func (c *Customer) Validate() error {
 	}
 
 	return nil
+}
+
+func (c *Customer) Update(
+	name string,
+	email string,
+) error {
+
+	c.Name = name
+	c.Email = email
+
+	return c.Validate()
 }

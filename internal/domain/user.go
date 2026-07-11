@@ -12,6 +12,7 @@ Métodos:
 - construtor NewUser()
 - Validate()
 - CheckPassword()
+- Update()
 */
 
 type User struct {
@@ -48,4 +49,15 @@ func (u *User) Validate() error {
 
 func (u *User) CheckPassword(password string) bool {
 	return u.PasswordHash == password
+}
+
+func (u *User) Update(
+	name string,
+	email string,
+) error {
+
+	u.Name = name
+	u.Email = email
+
+	return u.Validate()
 }

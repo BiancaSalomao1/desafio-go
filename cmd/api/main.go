@@ -74,6 +74,14 @@ func main() {
 		productRepository,
 	)
 
+	updateProduct := productusecase.NewUpdateProductUseCase(
+		productRepository,
+	)
+
+	deleteProduct := productusecase.NewDeleteProductUseCase(
+		productRepository,
+	)
+
 	createCustomer := customerusecase.NewCreateCustomerUseCase(
 		customerRepository,
 	)
@@ -86,6 +94,14 @@ func main() {
 		customerRepository,
 	)
 
+	updateCustomer := customerusecase.NewUpdateCustomerUseCase(
+		customerRepository,
+	)
+
+	deleteCustomer := customerusecase.NewDeleteCustomerUseCase(
+		customerRepository,
+	)
+
 	createUser := userusecase.NewCreateUserUseCase(
 		userRepository,
 	)
@@ -95,6 +111,14 @@ func main() {
 	)
 
 	listUsers := userusecase.NewListUsersUseCase(
+		userRepository,
+	)
+
+	updateUser := userusecase.NewUpdateUserUseCase(
+		userRepository,
+	)
+
+	deleteUser := userusecase.NewDeleteUserUseCase(
 		userRepository,
 	)
 
@@ -124,18 +148,24 @@ func main() {
 		createProduct,
 		getProduct,
 		listProducts,
+		updateProduct,
+		deleteProduct,
 	)
 
 	customerHandler := handler.NewCustomerHandler(
 		createCustomer,
 		getCustomer,
 		listCustomers,
+		updateCustomer,
+		deleteCustomer,
 	)
 
 	userHandler := handler.NewUserHandler(
 		createUser,
 		getUser,
 		listUsers,
+		updateUser,
+		deleteUser,
 	)
 
 	orderHandler := handler.NewOrderHandler(

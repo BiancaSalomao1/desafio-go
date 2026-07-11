@@ -22,14 +22,14 @@ Erros conhecidos:
 import "errors"
 
 var (
-	ErrProductNotFound = errors.New("product not found")
-	ErrProductInvalid  = errors.New("product invalid")
+	ErrProductNotFound     = errors.New("product not found")
+	ErrProductInvalid      = errors.New("product invalid")
+	ErrProductNameRequired = errors.New("product name is required")
+	ErrProductInUse        = errors.New("product is associated with one or more orders")
 
 	ErrCustomerNotFound = errors.New("customer not found")
 	ErrCustomerInvalid  = errors.New("customer invalid")
-
-	ErrUserNotFound       = errors.New("user not found")
-	ErrEmailAlreadyExists = errors.New("email already exists")
+	ErrCustomerInUse    = errors.New("customer is associated with one or more orders")
 
 	ErrOrderNotFound       = errors.New("order not found")
 	ErrEmptyOrder          = errors.New("empty order")
@@ -39,11 +39,13 @@ var (
 	ErrInvalidQuantity   = errors.New("invalid quantity")
 	ErrInsufficientStock = errors.New("insufficient stock")
 
-	ErrProductNameRequired = errors.New("product name is required")
-	ErrInvalidPrice        = errors.New("invalid price")
-	ErrInvalidStock        = errors.New("invalid stock")
+	ErrInvalidPrice = errors.New("invalid price")
+	ErrInvalidStock = errors.New("invalid stock")
 
-	ErrUserNameRequired  = errors.New("user name required")
-	ErrUserEmailRequired = errors.New("user email required")
-	ErrPasswordRequired  = errors.New("password required")
+	ErrUserNotFound       = errors.New("user not found")
+	ErrUserNameRequired   = errors.New("user name required")
+	ErrUserInUse          = errors.New("user is associated with one or more records")
+	ErrEmailAlreadyExists = errors.New("email already exists")
+	ErrUserEmailRequired  = errors.New("user email required")
+	ErrPasswordRequired   = errors.New("password required")
 )
