@@ -15,6 +15,10 @@ Métodos:
 - Update()
 */
 
+import (
+	"desafio-go/internal/security"
+)
+
 type User struct {
 	ID           string `json:"id"`
 	Name         string `json:"name"`
@@ -47,8 +51,14 @@ func (u *User) Validate() error {
 	return nil
 }
 
-func (u *User) CheckPassword(password string) bool {
-	return u.PasswordHash == password
+func (u *User) CheckPassword(
+	password string,
+) bool {
+
+	return security.CheckPassword(
+		u.PasswordHash,
+		password,
+	)
 }
 
 func (u *User) Update(

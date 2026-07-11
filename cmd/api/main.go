@@ -19,6 +19,7 @@ Métodos:
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"desafio-go/config"
 
@@ -30,6 +31,7 @@ import (
 
 	"desafio-go/infrastructure/repository/postgres"
 
+	authusecase "desafio-go/internal/usecase/auth"
 	customerusecase "desafio-go/internal/usecase/customer"
 	orderusecase "desafio-go/internal/usecase/order"
 	productusecase "desafio-go/internal/usecase/product"
@@ -54,12 +56,10 @@ func main() {
 
 	repositoryFactory := postgres.NewRepositoryFactory()
 
+	// Repositórios
 	productRepository := repositoryFactory.Product(db.Pool)
-
 	customerRepository := repositoryFactory.Customer(db.Pool)
-
 	userRepository := repositoryFactory.User(db.Pool)
-
 	orderRepository := repositoryFactory.Order(db.Pool)
 
 	createProduct := productusecase.NewCreateProductUseCase(
@@ -144,6 +144,22 @@ func main() {
 		repositoryFactory,
 	)
 
+	// JWT
+	jwtTTL, err := time.ParseDuration(cfg.JWTExpiresIn)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	loginUseCase := authusecase.NewLoginUseCase(
+		userRepository,
+		cfg.JWTSecret,
+		jwtTTL,
+	)
+
+	authHandler := handler.NewAuthHandler(
+		loginUseCase,
+	)
+
 	productHandler := handler.NewProductHandler(
 		createProduct,
 		getProduct,
@@ -181,6 +197,7 @@ func main() {
 		customerHandler,
 		userHandler,
 		orderHandler,
+		authHandler,
 	)
 
 	httpHandler := middleware.Recovery(

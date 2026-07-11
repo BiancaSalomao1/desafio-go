@@ -24,6 +24,7 @@ func NewRouter(
 	customerHandler *handler.CustomerHandler,
 	userHandler *handler.UserHandler,
 	orderHandler *handler.OrderHandler,
+	authHandler *handler.AuthHandler,
 ) *http.ServeMux {
 
 	mux := http.NewServeMux()
@@ -51,6 +52,8 @@ func NewRouter(
 	mux.HandleFunc("GET /orders/{id}", orderHandler.GetByID)
 	mux.HandleFunc("PATCH /orders/{id}/pay", orderHandler.Pay)
 	mux.HandleFunc("PATCH /orders/{id}/cancel", orderHandler.Cancel)
+
+	mux.HandleFunc("POST /login", authHandler.Login)
 
 	return mux
 }
