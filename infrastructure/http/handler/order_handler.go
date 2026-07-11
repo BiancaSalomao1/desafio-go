@@ -14,6 +14,7 @@ Campos:
 - getOrderUseCase
 - payOrderUseCase
 - cancelOrderUseCase
+- listOrderUseCase
 
 Métodos:
 - NewOrderHandler()
@@ -21,6 +22,7 @@ Métodos:
 - GetByID()
 - Pay()
 - Cancel()
+- List()
 */
 
 import (
@@ -37,6 +39,7 @@ import (
 type OrderHandler struct {
 	createOrderUseCase *orderusecase.CreateOrderUseCase
 	getOrderUseCase    *orderusecase.GetOrderUseCase
+	listOrdersUseCase  *orderusecase.ListOrdersUseCase
 	payOrderUseCase    *orderusecase.PayOrderUseCase
 	cancelOrderUseCase *orderusecase.CancelOrderUseCase
 }
@@ -44,6 +47,7 @@ type OrderHandler struct {
 func NewOrderHandler(
 	createOrderUseCase *orderusecase.CreateOrderUseCase,
 	getOrderUseCase *orderusecase.GetOrderUseCase,
+	listOrdersUseCase *orderusecase.ListOrdersUseCase,
 	payOrderUseCase *orderusecase.PayOrderUseCase,
 	cancelOrderUseCase *orderusecase.CancelOrderUseCase,
 ) *OrderHandler {
@@ -51,6 +55,7 @@ func NewOrderHandler(
 	return &OrderHandler{
 		createOrderUseCase: createOrderUseCase,
 		getOrderUseCase:    getOrderUseCase,
+		listOrdersUseCase:  listOrdersUseCase,
 		payOrderUseCase:    payOrderUseCase,
 		cancelOrderUseCase: cancelOrderUseCase,
 	}
@@ -166,5 +171,29 @@ func (h *OrderHandler) Cancel(
 	httpx.WriteStatus(
 		w,
 		http.StatusNoContent,
+	)
+}
+func (h *OrderHandler) List(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+
+	orders, err := h.listOrdersUseCase.Execute()
+
+	if err != nil {
+
+		httpx.WriteError(
+			w,
+			http.StatusInternalServerError,
+			err,
+		)
+
+		return
+	}
+
+	httpx.WriteJSON(
+		w,
+		http.StatusOK,
+		mapper.ToOrderResponseList(orders),
 	)
 }

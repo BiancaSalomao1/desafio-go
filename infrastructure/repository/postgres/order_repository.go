@@ -60,7 +60,11 @@ func (r *OrderPostgresRepository) Save(order *domain.Order) error {
 		return err
 	}
 
-	for _, item := range order.Items {
+	for i := range order.Items {
+
+		itemID := uuid.NewString()
+
+		order.Items[i].ID = itemID
 
 		_, err = r.db.Exec(
 			ctx,
@@ -77,12 +81,12 @@ func (r *OrderPostgresRepository) Save(order *domain.Order) error {
 			VALUES
 			($1,$2,$3,$4,$5,$6)
 			`,
-			uuid.NewString(),
+			itemID,
 			order.ID,
-			item.ProductID,
-			item.Name,
-			item.Price,
-			item.Quantity,
+			order.Items[i].ProductID,
+			order.Items[i].Name,
+			order.Items[i].Price,
+			order.Items[i].Quantity,
 		)
 
 		if err != nil {

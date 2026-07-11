@@ -51,6 +51,7 @@ func ToOrderResponse(
 				Name:      item.Name,
 				Price:     item.Price,
 				Quantity:  item.Quantity,
+				Subtotal:  item.Subtotal(),
 			},
 		)
 	}

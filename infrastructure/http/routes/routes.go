@@ -40,7 +40,10 @@ func NewRouter(
 	mux.HandleFunc("GET /users", userHandler.List)
 	mux.HandleFunc("GET /users/{id}", userHandler.GetByID)
 
+	// Orders
+
 	mux.HandleFunc("POST /orders", orderHandler.Create)
+	mux.HandleFunc("GET /orders", orderHandler.List)
 	mux.HandleFunc("GET /orders/{id}", orderHandler.GetByID)
 	mux.HandleFunc("PATCH /orders/{id}/pay", orderHandler.Pay)
 	mux.HandleFunc("PATCH /orders/{id}/cancel", orderHandler.Cancel)

@@ -107,13 +107,17 @@ func main() {
 		orderRepository,
 	)
 
+	listOrders := orderusecase.NewListOrdersUseCase(
+		orderRepository,
+	)
+
 	payOrder := orderusecase.NewPayOrderUseCase(
 		orderRepository,
 	)
 
 	cancelOrder := orderusecase.NewCancelOrderUseCase(
-		orderRepository,
-		productRepository,
+		transactionManager,
+		repositoryFactory,
 	)
 
 	productHandler := handler.NewProductHandler(
@@ -137,6 +141,7 @@ func main() {
 	orderHandler := handler.NewOrderHandler(
 		createOrder,
 		getOrder,
+		listOrders,
 		payOrder,
 		cancelOrder,
 	)

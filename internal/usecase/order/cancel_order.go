@@ -6,55 +6,74 @@ struct CancelOrderUseCase
 Responsabilidades:
 - cancelar pedido;
 - devolver estoque;
-- atualizar pedido.
+- atualizar pedido;
+- executar toda a operação em uma transação.
+
+Campos:
+- transactionManager
+- repositoryFactory
 
 Métodos:
 - NewCancelOrderUseCase()
 - Execute()
 */
 
-import "desafio-go/internal/repository"
+import (
+	"desafio-go/internal/repository"
+
+	"github.com/jackc/pgx/v5"
+)
 
 type CancelOrderUseCase struct {
-	orderRepository   repository.OrderRepository
-	productRepository repository.ProductRepository
+	transactionManager repository.TransactionManager
+	repositoryFactory  repository.RepositoryFactory
 }
 
 func NewCancelOrderUseCase(
-	orderRepository repository.OrderRepository,
-	productRepository repository.ProductRepository,
+	transactionManager repository.TransactionManager,
+	repositoryFactory repository.RepositoryFactory,
 ) *CancelOrderUseCase {
 
 	return &CancelOrderUseCase{
-		orderRepository:   orderRepository,
-		productRepository: productRepository,
+		transactionManager: transactionManager,
+		repositoryFactory:  repositoryFactory,
 	}
 }
 
 func (uc *CancelOrderUseCase) Execute(id string) error {
 
-	order, err := uc.orderRepository.FindByID(id)
-	if err != nil {
-		return err
-	}
+	return uc.transactionManager.WithinTransaction(func(tx pgx.Tx) error {
 
-	if err := order.Cancel(); err != nil {
-		return err
-	}
+		orderRepository := uc.repositoryFactory.Order(tx)
+		productRepository := uc.repositoryFactory.Product(tx)
 
-	for _, item := range order.Items {
-
-		product, err := uc.productRepository.FindByID(item.ProductID)
+		order, err := orderRepository.FindByID(id)
 		if err != nil {
 			return err
 		}
 
-		product.IncreaseStock(item.Quantity)
-
-		if err := uc.productRepository.Update(product); err != nil {
+		if err := order.Cancel(); err != nil {
 			return err
 		}
-	}
 
-	return uc.orderRepository.Update(order)
+		for _, item := range order.Items {
+
+			product, err := productRepository.FindByID(item.ProductID)
+			if err != nil {
+				return err
+			}
+
+			product.IncreaseStock(item.Quantity)
+
+			if err := productRepository.Update(product); err != nil {
+				return err
+			}
+		}
+
+		if err := orderRepository.Update(order); err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
