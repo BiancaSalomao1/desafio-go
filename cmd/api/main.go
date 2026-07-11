@@ -1,41 +1,167 @@
 package main
 
+/*
+Função main
+
+Responsabilidades:
+- carregar configurações;
+- executar migrations;
+- abrir conexão com PostgreSQL;
+- montar dependências da aplicação;
+- registrar rotas;
+- configurar middlewares;
+- iniciar servidor HTTP.
+
+Métodos:
+- main()
+*/
+
 import (
-	"fmt"
+	"log"
+	"net/http"
 
 	"desafio-go/config"
+
 	"desafio-go/infrastructure/database"
+
+	"desafio-go/infrastructure/http/handler"
+	"desafio-go/infrastructure/http/middleware"
+	"desafio-go/infrastructure/http/routes"
+
 	"desafio-go/infrastructure/repository/postgres"
+
+	customerusecase "desafio-go/internal/usecase/customer"
+	orderusecase "desafio-go/internal/usecase/order"
+	productusecase "desafio-go/internal/usecase/product"
+	userusecase "desafio-go/internal/usecase/user"
 )
 
 func main() {
 
 	cfg := config.Load()
 
+	if err := database.RunMigrations(cfg.DatabaseURL); err != nil {
+		log.Fatal(err)
+	}
+
 	db, err := database.New(cfg)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer db.Close()
 
-	fmt.Println("===================================")
-	fmt.Println(" SERVIÇO DE PEDIDOS")
-	fmt.Println("===================================")
+	transactionManager := database.NewTransactionManager(db.Pool)
 
-	fmt.Println("Conexão com PostgreSQL estabelecida.")
+	repositoryFactory := postgres.NewRepositoryFactory()
 
-	factory := postgres.NewRepositoryFactory()
+	productRepository := repositoryFactory.Product(db.Pool)
 
-	productRepository := factory.Product(db.Pool)
-	customerRepository := factory.Customer(db.Pool)
-	userRepository := factory.User(db.Pool)
-	orderRepository := factory.Order(db.Pool)
+	customerRepository := repositoryFactory.Customer(db.Pool)
 
-	fmt.Printf("ProductRepository  : %T\n", productRepository)
-	fmt.Printf("CustomerRepository : %T\n", customerRepository)
-	fmt.Printf("UserRepository     : %T\n", userRepository)
-	fmt.Printf("OrderRepository    : %T\n", orderRepository)
+	userRepository := repositoryFactory.User(db.Pool)
 
-	fmt.Println()
-	fmt.Println("Infraestrutura carregada com sucesso.")
+	orderRepository := repositoryFactory.Order(db.Pool)
+
+	createProduct := productusecase.NewCreateProductUseCase(
+		productRepository,
+	)
+
+	getProduct := productusecase.NewGetProductUseCase(
+		productRepository,
+	)
+
+	listProducts := productusecase.NewListProductsUseCase(
+		productRepository,
+	)
+
+	createCustomer := customerusecase.NewCreateCustomerUseCase(
+		customerRepository,
+	)
+
+	getCustomer := customerusecase.NewGetCustomerUseCase(
+		customerRepository,
+	)
+
+	listCustomers := customerusecase.NewListCustomersUseCase(
+		customerRepository,
+	)
+
+	createUser := userusecase.NewCreateUserUseCase(
+		userRepository,
+	)
+
+	getUser := userusecase.NewGetUserUseCase(
+		userRepository,
+	)
+
+	listUsers := userusecase.NewListUsersUseCase(
+		userRepository,
+	)
+
+	createOrder := orderusecase.NewCreateOrderUseCase(
+		transactionManager,
+		repositoryFactory,
+	)
+
+	getOrder := orderusecase.NewGetOrderUseCase(
+		orderRepository,
+	)
+
+	payOrder := orderusecase.NewPayOrderUseCase(
+		orderRepository,
+	)
+
+	cancelOrder := orderusecase.NewCancelOrderUseCase(
+		orderRepository,
+		productRepository,
+	)
+
+	productHandler := handler.NewProductHandler(
+		createProduct,
+		getProduct,
+		listProducts,
+	)
+
+	customerHandler := handler.NewCustomerHandler(
+		createCustomer,
+		getCustomer,
+		listCustomers,
+	)
+
+	userHandler := handler.NewUserHandler(
+		createUser,
+		getUser,
+		listUsers,
+	)
+
+	orderHandler := handler.NewOrderHandler(
+		createOrder,
+		getOrder,
+		payOrder,
+		cancelOrder,
+	)
+
+	router := routes.NewRouter(
+		productHandler,
+		customerHandler,
+		userHandler,
+		orderHandler,
+	)
+
+	httpHandler := middleware.Recovery(
+		middleware.Logger(
+			middleware.CORS(router),
+		),
+	)
+
+	server := &http.Server{
+		Addr:    ":" + cfg.AppPort,
+		Handler: httpHandler,
+	}
+
+	log.Printf("Servidor iniciado em %s", cfg.AppPort)
+
+	if err := server.ListenAndServe(); err != nil {
+		log.Fatal(err)
+	}
 }

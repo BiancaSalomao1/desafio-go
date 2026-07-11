@@ -20,6 +20,7 @@ type Config struct {
 	AppName      string
 	AppEnv       string
 	AppPort      string
+	ServerPort   string
 	DatabaseURL  string
 	JWTSecret    string
 	JWTExpiresIn string
