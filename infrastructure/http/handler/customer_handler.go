@@ -60,6 +60,17 @@ func NewCustomerHandler(
 	}
 }
 
+// Create
+//
+// @Summary Criar Cliente
+// @Description Cadastra um novo cliente.
+// @Tags Customers
+// @Accept json
+// @Produce json
+// @Param request body customerdto.CreateCustomerRequest true "Cliente"
+// @Success 201 {object} customer.CustomerResponse
+// @Failure 400 {object} httpx.ErrorResponse
+// @Router /customers [post]
 func (h *CustomerHandler) Create(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -98,6 +109,17 @@ func (h *CustomerHandler) Create(
 	)
 }
 
+// GetByID
+//
+// @Summary Buscar Cliente
+// @Description Busca um cliente pelo ID.
+// @Tags Customers
+// @Produce json
+// @Param id path string true "ID"
+// @Success 200 {object} customer.CustomerResponse
+// @Failure 404 {object} httpx.ErrorResponse
+// @Security BearerAuth
+// @Router /customers/{id} [get]
 func (h *CustomerHandler) GetByID(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -125,6 +147,16 @@ func (h *CustomerHandler) GetByID(
 	)
 }
 
+// List
+//
+// @Summary Listar Clientes
+// @Description Retorna todos os clientes.
+// @Tags Customers
+// @Produce json
+// @Success 200 {array} customer.CustomerResponse
+// @Failure 500 {object} httpx.ErrorResponse
+// @Security BearerAuth
+// @Router /customers [get]
 func (h *CustomerHandler) List(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -150,6 +182,19 @@ func (h *CustomerHandler) List(
 	)
 }
 
+// Update
+//
+// @Summary Atualizar Cliente
+// @Description Atualiza um cliente.
+// @Tags Customers
+// @Accept json
+// @Produce json
+// @Param id path string true "ID"
+// @Param request body customer.UpdateCustomerRequest true "Cliente"
+// @Success 200 {object} customer.CustomerResponse
+// @Failure 400 {object} httpx.ErrorResponse
+// @Security BearerAuth
+// @Router /customers/{id} [put]
 func (h *CustomerHandler) Update(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -193,6 +238,17 @@ func (h *CustomerHandler) Update(
 	)
 }
 
+// Delete
+//
+// @Summary Remover Cliente
+// @Description Remove um cliente.
+// @Tags Customers
+// @Produce json
+// @Param id path string true "ID"
+// @Success 204
+// @Failure 400 {object} httpx.ErrorResponse
+// @Security BearerAuth
+// @Router /customers/{id} [delete]
 func (h *CustomerHandler) Delete(
 	w http.ResponseWriter,
 	r *http.Request,

@@ -59,6 +59,17 @@ func NewUserHandler(
 	}
 }
 
+// Create
+//
+// @Summary Criar Usuário
+// @Description Cadastra um novo usuário.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param request body user.CreateUserRequest true "Usuário"
+// @Success 201 {object} user.UserResponse
+// @Failure 400 {object} httpx.ErrorResponse
+// @Router /users [post]
 func (h *UserHandler) Create(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -97,6 +108,17 @@ func (h *UserHandler) Create(
 	)
 }
 
+// GetByID
+//
+// @Summary Buscar Usuário
+// @Description Busca um usuário pelo ID.
+// @Tags Users
+// @Produce json
+// @Param id path string true "ID"
+// @Success 200 {object} user.UserResponse
+// @Failure 404 {object} httpx.ErrorResponse
+// @Security BearerAuth
+// @Router /users/{id} [get]
 func (h *UserHandler) GetByID(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -123,6 +145,16 @@ func (h *UserHandler) GetByID(
 	)
 }
 
+// List
+//
+// @Summary Listar Usuários
+// @Description Retorna todos os usuários.
+// @Tags Users
+// @Produce json
+// @Success 200 {array} user.UserResponse
+// @Failure 500 {object} httpx.ErrorResponse
+// @Security BearerAuth
+// @Router /users [get]
 func (h *UserHandler) List(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -147,6 +179,19 @@ func (h *UserHandler) List(
 	)
 }
 
+// Update
+//
+// @Summary Atualizar Usuário
+// @Description Atualiza um usuário.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path string true "ID"
+// @Param request body user.UpdateUserRequest true "Usuário"
+// @Success 200 {object} user.UserResponse
+// @Failure 400 {object} httpx.ErrorResponse
+// @Security BearerAuth
+// @Router /users/{id} [put]
 func (h *UserHandler) Update(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -190,6 +235,17 @@ func (h *UserHandler) Update(
 	)
 }
 
+// Delete
+//
+// @Summary Remover Usuário
+// @Description Remove um usuário.
+// @Tags Users
+// @Produce json
+// @Param id path string true "ID"
+// @Success 204
+// @Failure 400 {object} httpx.ErrorResponse
+// @Security BearerAuth
+// @Router /users/{id} [delete]
 func (h *UserHandler) Delete(
 	w http.ResponseWriter,
 	r *http.Request,

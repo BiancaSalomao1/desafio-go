@@ -63,6 +63,16 @@ func NewProductHandler(
 	}
 }
 
+// Create
+//
+// @Summary Criar Produto
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Param request body product.CreateProductRequest true "Produto"
+// @Success 201 {object} product.ProductResponse
+// @Security BearerAuth
+// @Router /products [post]
 func (h *ProductHandler) Create(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -104,6 +114,14 @@ func (h *ProductHandler) Create(
 	)
 }
 
+// List
+//
+// @Summary Listar Produtos
+// @Tags Products
+// @Produce json
+// @Success 200 {array} product.ProductResponse
+// @Security BearerAuth
+// @Router /products [get]
 func (h *ProductHandler) List(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -129,6 +147,15 @@ func (h *ProductHandler) List(
 	)
 }
 
+// GetByID
+//
+// @Summary Buscar Produto
+// @Tags Products
+// @Produce json
+// @Param id path string true "ID"
+// @Success 200 {object} product.ProductResponse
+// @Security BearerAuth
+// @Router /products/{id} [get]
 func (h *ProductHandler) GetByID(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -156,6 +183,17 @@ func (h *ProductHandler) GetByID(
 	)
 }
 
+// Update
+//
+// @Summary Atualizar Produto
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Param id path string true "ID"
+// @Param request body product.UpdateProductRequest true "Produto"
+// @Success 200 {object} product.ProductResponse
+// @Security BearerAuth
+// @Router /products/{id} [put]
 func (h *ProductHandler) Update(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -199,16 +237,15 @@ func (h *ProductHandler) Update(
 	)
 }
 
-/*
-Função Delete
-
-Responsabilidades:
-- remover um produto.
-
-Métodos:
-- Delete()
-*/
-
+// Delete
+//
+// @Summary Remover Produto
+// @Tags Products
+// @Produce json
+// @Param id path string true "ID"
+// @Success 204
+// @Security BearerAuth
+// @Router /products/{id} [delete]
 func (h *ProductHandler) Delete(
 	w http.ResponseWriter,
 	r *http.Request,

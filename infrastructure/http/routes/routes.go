@@ -14,9 +14,12 @@ Métodos:
 */
 
 import (
+	"desafio-go/infrastructure/http/handler"
 	"net/http"
 
-	"desafio-go/infrastructure/http/handler"
+	_ "desafio-go/docs"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func NewRouter(
@@ -28,6 +31,7 @@ func NewRouter(
 ) *http.ServeMux {
 
 	mux := http.NewServeMux()
+	mux.Handle("/swagger/", httpSwagger.WrapHandler)
 
 	mux.HandleFunc("POST /products", productHandler.Create)
 	mux.HandleFunc("GET /products", productHandler.List)

@@ -15,7 +15,7 @@ import (
 
 	"desafio-go/infrastructure/http/httpx"
 
-	authdto "desafio-go/internal/dto/auth"
+	"desafio-go/internal/dto/auth"
 )
 
 type AuthHandler struct {
@@ -31,12 +31,24 @@ func NewAuthHandler(
 	}
 }
 
+// Login
+//
+// @Summary Login
+// @Description Autentica um usuário e retorna um JWT.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body auth.LoginRequest true "Credenciais"
+// @Success 200 {object} auth.LoginResponse
+// @Failure 400 {object} httpx.ErrorResponse
+// @Failure 401 {object} httpx.ErrorResponse
+// @Router /login [post]
 func (h *AuthHandler) Login(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
 
-	var request authdto.LoginRequest
+	var request auth.LoginRequest
 
 	if err := httpx.ReadJSON(r, &request); err != nil {
 
@@ -68,7 +80,7 @@ func (h *AuthHandler) Login(
 	httpx.WriteJSON(
 		w,
 		http.StatusOK,
-		authdto.LoginResponse{
+		auth.LoginResponse{
 			AccessToken: token,
 		},
 	)

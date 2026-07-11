@@ -61,6 +61,18 @@ func NewOrderHandler(
 	}
 }
 
+// Create
+//
+// @Summary Criar Pedido
+// @Description Cria um novo pedido.
+// @Tags Orders
+// @Accept json
+// @Produce json
+// @Param request body order.CreateOrderRequest true "Pedido"
+// @Success 201 {object} order.OrderResponse
+// @Failure 400 {object} httpx.ErrorResponse
+// @Security BearerAuth
+// @Router /orders [post]
 func (h *OrderHandler) Create(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -99,6 +111,17 @@ func (h *OrderHandler) Create(
 	)
 }
 
+// GetByID
+//
+// @Summary Buscar Pedido
+// @Description Busca um pedido pelo ID.
+// @Tags Orders
+// @Produce json
+// @Param id path string true "ID"
+// @Success 200 {object} order.OrderResponse
+// @Failure 404 {object} httpx.ErrorResponse
+// @Security BearerAuth
+// @Router /orders/{id} [get]
 func (h *OrderHandler) GetByID(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -126,6 +149,17 @@ func (h *OrderHandler) GetByID(
 	)
 }
 
+// Pay
+//
+// @Summary Pagar Pedido
+// @Description Altera o status do pedido para PAID.
+// @Tags Orders
+// @Produce json
+// @Param id path string true "ID"
+// @Success 204
+// @Failure 400 {object} httpx.ErrorResponse
+// @Security BearerAuth
+// @Router /orders/{id}/pay [patch]
 func (h *OrderHandler) Pay(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -150,6 +184,17 @@ func (h *OrderHandler) Pay(
 	)
 }
 
+// Cancel
+//
+// @Summary Cancelar Pedido
+// @Description Cancela um pedido e devolve o estoque.
+// @Tags Orders
+// @Produce json
+// @Param id path string true "ID"
+// @Success 204
+// @Failure 400 {object} httpx.ErrorResponse
+// @Security BearerAuth
+// @Router /orders/{id}/cancel [patch]
 func (h *OrderHandler) Cancel(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -173,6 +218,17 @@ func (h *OrderHandler) Cancel(
 		http.StatusNoContent,
 	)
 }
+
+// List
+//
+// @Summary Listar Pedidos
+// @Description Retorna todos os pedidos.
+// @Tags Orders
+// @Produce json
+// @Success 200 {array} order.OrderResponse
+// @Failure 500 {object} httpx.ErrorResponse
+// @Security BearerAuth
+// @Router /orders [get]
 func (h *OrderHandler) List(
 	w http.ResponseWriter,
 	r *http.Request,
