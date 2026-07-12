@@ -7,7 +7,12 @@ include .env
 export
 endif
 
-MIGRATE=$(shell go env GOPATH)/bin/migrate
+.PHONY: \
+	run build fmt fmt-check vet test tidy clean check \
+	up down restart logs ps docker-build \
+	swagger \
+	migrate-up migrate-down migrate-version migrate-force \
+	test-api test-crud
 
 # ==========================
 # Aplicação
@@ -22,6 +27,9 @@ build:
 fmt:
 	go fmt ./...
 
+fmt-check:
+	test -z "$$(gofmt -l .)"
+
 vet:
 	go vet ./...
 
@@ -31,9 +39,31 @@ test:
 tidy:
 	go mod tidy
 
+clean:
+	go clean
+
+check:
+	$(MAKE) fmt-check
+	$(MAKE) vet
+	$(MAKE) test
+	$(MAKE) build
+
+# ==========================
+# Swagger
+# ==========================
+
+swagger:
+	swag init \
+		-g cmd/api/main.go \
+		--parseInternal \
+		--parseDependency
+
 # ==========================
 # Docker
 # ==========================
+
+docker-build:
+	docker build -t desafio-go .
 
 up:
 	docker compose up -d
@@ -86,3 +116,13 @@ migrate-force:
 		migrate/migrate \
 		-path=/migrations \
 		-database "$(DATABASE_URL)" force 1
+
+# ==========================
+# Scripts de Teste
+# ==========================
+
+test-api:
+	./scripts/smoke_test.sh
+
+test-crud:
+	./scripts/crud_test.sh
