@@ -1,0 +1,59 @@
+@host=http://localhost:8080
+@token="COLE_SEU_TOKEN"
+
+### ======================================================
+### Criar Produto
+### ======================================================
+
+POST {{host}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name":"Notebook Gamer",
+    "price":4200,
+    "stock":15
+}
+
+###
+
+### ======================================================
+### Listar Produtos
+### ======================================================
+
+GET {{host}}/products
+Authorization: Bearer {{token}}
+
+###
+
+### ======================================================
+### Buscar Produto
+### ======================================================
+
+GET {{host}}/products/{{productId}}
+Authorization: Bearer {{token}}
+
+###
+
+### ======================================================
+### Atualizar Produto
+### ======================================================
+
+PUT {{host}}/products/{{productId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name":"Notebook Gamer RTX",
+    "price":4500,
+    "stock":12
+}
+
+###
+
+### ======================================================
+### Remover Produto
+### ======================================================
+
+DELETE {{host}}/products/{{productId}}
+Authorization: Bearer {{token}}

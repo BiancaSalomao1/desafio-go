@@ -168,6 +168,7 @@ func main() {
 		userHandler,
 		orderHandler,
 		authHandler,
+		cfg.JWTSecret,
 	)
 
 	// Middlewares globais

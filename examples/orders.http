@@ -1,0 +1,46 @@
+@host=http://localhost:8080
+@token=COLE_SEU_TOKEN
+
+### Criar Pedido
+
+POST {{host}}/orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "customerId":"{{customerId}}",
+    "items":[
+        {
+            "productId":"{{productId}}",
+            "quantity":2
+        }
+    ]
+}
+
+###
+
+### Listar Pedidos
+
+GET {{host}}/orders
+Authorization: Bearer {{token}}
+
+###
+
+### Buscar Pedido
+
+GET {{host}}/orders/{{orderId}}
+Authorization: Bearer {{token}}
+
+###
+
+### Pagar Pedido
+
+PATCH {{host}}/orders/{{orderId}}/pay
+Authorization: Bearer {{token}}
+
+###
+
+### Cancelar Pedido
+
+PATCH {{host}}/orders/{{orderId}}/cancel
+Authorization: Bearer {{token}}

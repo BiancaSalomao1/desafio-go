@@ -4,20 +4,21 @@ package routes
 struct Router
 
 Responsabilidades:
-- registrar todas as rotas da API.
-
-Campos:
-- mux
+- registrar todas as rotas da API;
+- definir quais rotas são públicas;
+- proteger as demais com JWT.
 
 Métodos:
 - NewRouter()
 */
 
 import (
-	"desafio-go/infrastructure/http/handler"
 	"net/http"
 
 	_ "desafio-go/docs"
+
+	"desafio-go/infrastructure/http/handler"
+	"desafio-go/infrastructure/http/middleware"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -28,36 +29,98 @@ func NewRouter(
 	userHandler *handler.UserHandler,
 	orderHandler *handler.OrderHandler,
 	authHandler *handler.AuthHandler,
+	jwtSecret string,
 ) *http.ServeMux {
 
 	mux := http.NewServeMux()
+
+	// Swagger
 	mux.Handle("/swagger/", httpSwagger.WrapHandler)
 
-	mux.HandleFunc("POST /products", productHandler.Create)
-	mux.HandleFunc("GET /products", productHandler.List)
-	mux.HandleFunc("GET /products/{id}", productHandler.GetByID)
-	mux.HandleFunc("PUT /products/{id}", productHandler.Update)
-	mux.HandleFunc("DELETE /products/{id}", productHandler.Delete)
+	// Middleware JWT
+	auth := middleware.Auth(jwtSecret)
 
-	mux.HandleFunc("POST /customers", customerHandler.Create)
-	mux.HandleFunc("GET /customers", customerHandler.List)
-	mux.HandleFunc("GET /customers/{id}", customerHandler.GetByID)
-	mux.HandleFunc("PUT /customers/{id}", customerHandler.Update)
-	mux.HandleFunc("DELETE /custumers/{id}", customerHandler.Delete)
-
-	mux.HandleFunc("POST /users", userHandler.Create)
-	mux.HandleFunc("GET /users", userHandler.List)
-	mux.HandleFunc("GET /users/{id}", userHandler.GetByID)
-	mux.HandleFunc("PUT /users/{id}", userHandler.Update)
-	mux.HandleFunc("DELETE /users/{id}", userHandler.Delete)
-
-	mux.HandleFunc("POST /orders", orderHandler.Create)
-	mux.HandleFunc("GET /orders", orderHandler.List)
-	mux.HandleFunc("GET /orders/{id}", orderHandler.GetByID)
-	mux.HandleFunc("PATCH /orders/{id}/pay", orderHandler.Pay)
-	mux.HandleFunc("PATCH /orders/{id}/cancel", orderHandler.Cancel)
+	// ==========================
+	// Rotas Públicas
+	// ==========================
 
 	mux.HandleFunc("POST /login", authHandler.Login)
+
+	// Permite criar o primeiro usuário
+	mux.HandleFunc("POST /users", userHandler.Create)
+
+	// ==========================
+	// Produtos
+	// ==========================
+
+	mux.Handle("POST /products",
+		auth(http.HandlerFunc(productHandler.Create)))
+
+	mux.Handle("GET /products",
+		auth(http.HandlerFunc(productHandler.List)))
+
+	mux.Handle("GET /products/{id}",
+		auth(http.HandlerFunc(productHandler.GetByID)))
+
+	mux.Handle("PUT /products/{id}",
+		auth(http.HandlerFunc(productHandler.Update)))
+
+	mux.Handle("DELETE /products/{id}",
+		auth(http.HandlerFunc(productHandler.Delete)))
+
+	// ==========================
+	// Clientes
+	// ==========================
+
+	mux.Handle("POST /customers",
+		auth(http.HandlerFunc(customerHandler.Create)))
+
+	mux.Handle("GET /customers",
+		auth(http.HandlerFunc(customerHandler.List)))
+
+	mux.Handle("GET /customers/{id}",
+		auth(http.HandlerFunc(customerHandler.GetByID)))
+
+	mux.Handle("PUT /customers/{id}",
+		auth(http.HandlerFunc(customerHandler.Update)))
+
+	mux.Handle("DELETE /customers/{id}",
+		auth(http.HandlerFunc(customerHandler.Delete)))
+
+	// ==========================
+	// Usuários
+	// ==========================
+
+	mux.Handle("GET /users",
+		auth(http.HandlerFunc(userHandler.List)))
+
+	mux.Handle("GET /users/{id}",
+		auth(http.HandlerFunc(userHandler.GetByID)))
+
+	mux.Handle("PUT /users/{id}",
+		auth(http.HandlerFunc(userHandler.Update)))
+
+	mux.Handle("DELETE /users/{id}",
+		auth(http.HandlerFunc(userHandler.Delete)))
+
+	// ==========================
+	// Pedidos
+	// ==========================
+
+	mux.Handle("POST /orders",
+		auth(http.HandlerFunc(orderHandler.Create)))
+
+	mux.Handle("GET /orders",
+		auth(http.HandlerFunc(orderHandler.List)))
+
+	mux.Handle("GET /orders/{id}",
+		auth(http.HandlerFunc(orderHandler.GetByID)))
+
+	mux.Handle("PATCH /orders/{id}/pay",
+		auth(http.HandlerFunc(orderHandler.Pay)))
+
+	mux.Handle("PATCH /orders/{id}/cancel",
+		auth(http.HandlerFunc(orderHandler.Cancel)))
 
 	return mux
 }

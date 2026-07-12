@@ -1,0 +1,47 @@
+@host=http://localhost:8080
+@token=COLE_SEU_TOKEN
+
+### Criar Usuário
+
+POST {{host}}/users
+Content-Type: application/json
+
+{
+    "name":"Administrador",
+    "email":"admin@email.com",
+    "password":"123456"
+}
+
+###
+
+### Listar Usuários
+
+GET {{host}}/users
+Authorization: Bearer {{token}}
+
+###
+
+### Buscar Usuário
+
+GET {{host}}/users/{{userId}}
+Authorization: Bearer {{token}}
+
+###
+
+### Atualizar Usuário
+
+PUT {{host}}/users/{{userId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name":"Administrador Master",
+    "email":"admin@email.com"
+}
+
+###
+
+### Remover Usuário
+
+DELETE {{host}}/users/{{userId}}
+Authorization: Bearer {{token}}

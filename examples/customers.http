@@ -1,0 +1,47 @@
+@host=http://localhost:8080
+@token="COLE_SEU_TOKEN"
+
+### Criar Cliente
+
+POST {{host}}/customers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name":"João Silva",
+    "email":"joao@email.com"
+}
+
+###
+
+### Listar Clientes
+
+GET {{host}}/customers
+Authorization: Bearer {{token}}
+
+###
+
+### Buscar Cliente
+
+GET {{host}}/customers/36e55560-609a-407d-81ef-4a5a8d819ee3
+Authorization: Bearer {{token}}
+
+###
+
+### Atualizar Cliente
+
+PUT {{host}}/customers/36e55560-609a-407d-81ef-4a5a8d819ee3
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name":"João Silva Santos",
+    "email":"joao@email.com"
+}
+
+###
+
+### Remover Cliente
+
+DELETE {{host}}/customers/36e55560-609a-407d-81ef-4a5a8d819ee3
+Authorization: Bearer {{token}}

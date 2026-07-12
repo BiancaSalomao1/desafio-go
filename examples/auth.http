@@ -1,0 +1,17 @@
+### ======================================================
+### Login - Teste com REST Client
+### ======================================================
+
+POST http://localhost:8080/login
+Content-Type: application/json
+
+{
+    "email":"admin@email.com",
+    "password":"123456"
+}
+
+###
+
+@host=http://localhost:8080
+
+

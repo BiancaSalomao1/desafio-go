@@ -25,11 +25,11 @@ build:
 	go build ./...
 
 fmt:
-	go fmt ./...
+	gofmt -w .
 
 fmt-check:
 	test -z "$$(gofmt -l .)"
-
+	
 vet:
 	go vet ./...
 
