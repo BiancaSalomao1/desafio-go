@@ -34,6 +34,8 @@ import (
 	"desafio-go/internal/mapper"
 
 	orderusecase "desafio-go/internal/usecase/order"
+
+	"strconv"
 )
 
 type OrderHandler struct {
@@ -229,12 +231,28 @@ func (h *OrderHandler) Cancel(
 // @Failure 500 {object} httpx.ErrorResponse
 // @Security BearerAuth
 // @Router /orders [get]
+// @Param limit query int false "Quantidade máxima de registros"
+// @Param offset query int false "Quantidade de registros ignorados"
 func (h *OrderHandler) List(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
 
-	orders, err := h.listOrdersUseCase.Execute()
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil || limit <= 0 {
+		limit = 10
+	}
+
+	if limit > 100 {
+		limit = 100
+	}
+
+	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+	if err != nil || offset < 0 {
+		offset = 0
+	}
+
+	orders, err := h.listOrdersUseCase.Execute(limit, offset)
 
 	if err != nil {
 

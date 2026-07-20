@@ -299,3 +299,101 @@ func (r *OrderPostgresRepository) FindAll() ([]*domain.Order, error) {
 
 	return orders, nil
 }
+
+func (r *OrderPostgresRepository) List(limit, offset int) ([]*domain.Order, error) {
+
+	ctx := context.Background()
+
+	query := `
+		SELECT
+			id,
+			customer_id,
+			status
+		FROM orders
+		ORDER BY created_at DESC
+		LIMIT $1
+		OFFSET $2
+	`
+
+	rows, err := r.db.Query(
+		ctx,
+		query,
+		limit,
+		offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var orders []*domain.Order
+
+	for rows.Next() {
+
+		order := &domain.Order{}
+
+		err := rows.Scan(
+			&order.ID,
+			&order.CustomerID,
+			&order.Status,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		itemQuery := `
+			SELECT
+				id,
+				product_id,
+				product_name,
+				product_price,
+				quantity
+			FROM order_items
+			WHERE order_id = $1
+			ORDER BY product_name
+		`
+
+		itemRows, err := r.db.Query(
+			ctx,
+			itemQuery,
+			order.ID,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		for itemRows.Next() {
+
+			item := domain.OrderItem{}
+
+			err := itemRows.Scan(
+				&item.ID,
+				&item.ProductID,
+				&item.Name,
+				&item.Price,
+				&item.Quantity,
+			)
+			if err != nil {
+				itemRows.Close()
+				return nil, err
+			}
+
+			order.Items = append(order.Items, item)
+		}
+
+		if err := itemRows.Err(); err != nil {
+			itemRows.Close()
+			return nil, err
+		}
+
+		itemRows.Close()
+
+		orders = append(orders, order)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}

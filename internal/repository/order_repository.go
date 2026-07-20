@@ -27,4 +27,5 @@ type OrderRepository interface {
 	Delete(id string) error
 	FindByID(id string) (*domain.Order, error)
 	FindAll() ([]*domain.Order, error)
+	List(limit, offset int) ([]*domain.Order, error)
 }

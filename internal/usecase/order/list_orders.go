@@ -24,6 +24,6 @@ func NewListOrdersUseCase(orderRepository repository.OrderRepository) *ListOrder
 	}
 }
 
-func (uc *ListOrdersUseCase) Execute() ([]*domain.Order, error) {
-	return uc.orderRepository.FindAll()
+func (uc *ListOrdersUseCase) Execute(limit, offset int) ([]*domain.Order, error) {
+	return uc.orderRepository.List(limit, offset)
 }
