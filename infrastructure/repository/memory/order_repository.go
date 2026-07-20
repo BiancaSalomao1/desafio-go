@@ -90,3 +90,22 @@ func (r *MemoryOrderRepository) FindAll() ([]*domain.Order, error) {
 
 	return orders, nil
 }
+
+func (r *MemoryOrderRepository) List(limit, offset int) ([]*domain.Order, error) {
+	orders := make([]*domain.Order, 0, len(r.orders))
+
+	for _, order := range r.orders {
+		orders = append(orders, order)
+	}
+
+	if offset >= len(orders) {
+		return []*domain.Order{}, nil
+	}
+
+	end := offset + limit
+	if end > len(orders) {
+		end = len(orders)
+	}
+
+	return orders[offset:end], nil
+}
