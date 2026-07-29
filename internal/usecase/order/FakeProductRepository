@@ -1,0 +1,27 @@
+type fakeProductRepository struct {
+	product *domain.Product
+
+	findError   error
+	updateError error
+
+	findCalls   int
+	updateCalls int
+}
+
+func (r *fakeProductRepository) FindByID(id string) (*domain.Product, error) {
+
+	r.findCalls++
+
+	if r.findError != nil {
+		return nil, r.findError
+	}
+
+	return r.product, nil
+}
+
+func (r *fakeProductRepository) Update(product *domain.Product) error {
+
+	r.updateCalls++
+
+	return r.updateError
+}

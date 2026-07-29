@@ -19,7 +19,6 @@ import (
 
 	"desafio-go/internal/repository"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -37,7 +36,7 @@ func NewTransactionManager(
 }
 
 func (tm *TransactionManager) WithinTransaction(
-	fn func(tx pgx.Tx) error,
+	fn func(tx repository.DBTX) error,
 ) error {
 
 	ctx := context.Background()

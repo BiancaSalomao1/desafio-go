@@ -17,8 +17,6 @@ Métodos:
 import (
 	"desafio-go/internal/domain"
 	"desafio-go/internal/repository"
-
-	"github.com/jackc/pgx/v5"
 )
 
 type CreateOrderUseCase struct {
@@ -43,7 +41,7 @@ func (uc *CreateOrderUseCase) Execute(order *domain.Order) error {
 		return err
 	}
 
-	return uc.transactionManager.WithinTransaction(func(tx pgx.Tx) error {
+	return uc.transactionManager.WithinTransaction(func(tx repository.DBTX) error {
 
 		productRepository := uc.repositoryFactory.Product(tx)
 		customerRepository := uc.repositoryFactory.Customer(tx)

@@ -20,8 +20,6 @@ Métodos:
 
 import (
 	"desafio-go/internal/repository"
-
-	"github.com/jackc/pgx/v5"
 )
 
 type CancelOrderUseCase struct {
@@ -42,7 +40,7 @@ func NewCancelOrderUseCase(
 
 func (uc *CancelOrderUseCase) Execute(id string) error {
 
-	return uc.transactionManager.WithinTransaction(func(tx pgx.Tx) error {
+	return uc.transactionManager.WithinTransaction(func(tx repository.DBTX) error {
 
 		orderRepository := uc.repositoryFactory.Order(tx)
 		productRepository := uc.repositoryFactory.Product(tx)
