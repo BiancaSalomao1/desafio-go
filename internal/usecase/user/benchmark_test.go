@@ -31,3 +31,29 @@ func BenchmarkCreateUserUseCase_Execute(b *testing.B) {
 		_ = useCase.Execute(user)
 	}
 }
+func BenchmarkUpdateUserUseCase_Execute(b *testing.B) {
+
+	repository := &userRepositoryStub{
+		user: &domain.User{
+			ID:           "1",
+			Name:         "Administrador",
+			Email:        "admin@email.com",
+			PasswordHash: "hash",
+		},
+	}
+
+	useCase := NewUpdateUserUseCase(repository)
+
+	user := &domain.User{
+		ID:           "1",
+		Name:         "Novo Nome",
+		Email:        "novo@email.com",
+		PasswordHash: "hash",
+	}
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		_ = useCase.Execute(user)
+	}
+}

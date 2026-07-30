@@ -124,7 +124,7 @@ func TestCreateUserUseCase_Execute(t *testing.T) {
 	t.Run("should satisfy mock expectations", func(t *testing.T) {
 
 		repository := &userRepositoryMock{
-			expectedCalls: 1,
+			expectedSaveCalls: 1,
 		}
 
 		useCase := NewCreateUserUseCase(repository)

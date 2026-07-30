@@ -59,3 +59,7 @@ Métodos:
 type CancelOrderUseCase interface {
 	Execute(id string) error
 }
+
+type ListOrdersUseCase interface {
+	Execute(limit int, offset int) ([]*domain.Order, error)
+}

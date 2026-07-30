@@ -33,33 +33,31 @@ import (
 	orderdto "desafio-go/internal/dto/order"
 	"desafio-go/internal/mapper"
 
-	orderusecase "desafio-go/internal/usecase/order"
-
 	"strconv"
 )
 
 type OrderHandler struct {
-	createOrderUseCase *orderusecase.CreateOrderUseCase
-	getOrderUseCase    *orderusecase.GetOrderUseCase
-	listOrdersUseCase  *orderusecase.ListOrdersUseCase
-	payOrderUseCase    *orderusecase.PayOrderUseCase
-	cancelOrderUseCase *orderusecase.CancelOrderUseCase
+	createOrderUseCase CreateOrderUseCase
+	getOrderUseCase    GetOrderUseCase
+	listOrdersUseCase  ListOrdersUseCase
+	payOrderUseCase    PayOrderUseCase
+	cancelOrderUseCase CancelOrderUseCase
 }
 
 func NewOrderHandler(
-	createOrderUseCase *orderusecase.CreateOrderUseCase,
-	getOrderUseCase *orderusecase.GetOrderUseCase,
-	listOrdersUseCase *orderusecase.ListOrdersUseCase,
-	payOrderUseCase *orderusecase.PayOrderUseCase,
-	cancelOrderUseCase *orderusecase.CancelOrderUseCase,
+	create CreateOrderUseCase,
+	get GetOrderUseCase,
+	list ListOrdersUseCase,
+	pay PayOrderUseCase,
+	cancel CancelOrderUseCase,
 ) *OrderHandler {
 
 	return &OrderHandler{
-		createOrderUseCase: createOrderUseCase,
-		getOrderUseCase:    getOrderUseCase,
-		listOrdersUseCase:  listOrdersUseCase,
-		payOrderUseCase:    payOrderUseCase,
-		cancelOrderUseCase: cancelOrderUseCase,
+		createOrderUseCase: create,
+		getOrderUseCase:    get,
+		listOrdersUseCase:  list,
+		payOrderUseCase:    pay,
+		cancelOrderUseCase: cancel,
 	}
 }
 

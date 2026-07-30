@@ -16,21 +16,26 @@ import (
 )
 
 type productRepositoryMock struct {
-	expectedCalls int
-	currentCalls  int
+	product *domain.Product
 
-	saveError error
+	expectedSaveCalls int
+	currentSaveCalls  int
+
+	expectedUpdateCalls int
+	currentUpdateCalls  int
+
+	saveError   error
+	updateError error
 }
 
 func (r *productRepositoryMock) Save(product *domain.Product) error {
-
-	r.currentCalls++
-
+	r.currentSaveCalls++
 	return r.saveError
 }
 
 func (r *productRepositoryMock) Update(product *domain.Product) error {
-	return nil
+	r.currentUpdateCalls++
+	return r.updateError
 }
 
 func (r *productRepositoryMock) Delete(id string) error {
@@ -38,7 +43,7 @@ func (r *productRepositoryMock) Delete(id string) error {
 }
 
 func (r *productRepositoryMock) FindByID(id string) (*domain.Product, error) {
-	return nil, nil
+	return r.product, nil
 }
 
 func (r *productRepositoryMock) FindAll() ([]*domain.Product, error) {
@@ -47,8 +52,12 @@ func (r *productRepositoryMock) FindAll() ([]*domain.Product, error) {
 
 func (r *productRepositoryMock) Verify() error {
 
-	if r.currentCalls != r.expectedCalls {
+	if r.currentSaveCalls != r.expectedSaveCalls {
 		return errors.New("unexpected number of Save calls")
+	}
+
+	if r.currentUpdateCalls != r.expectedUpdateCalls {
+		return errors.New("unexpected number of Update calls")
 	}
 
 	return nil

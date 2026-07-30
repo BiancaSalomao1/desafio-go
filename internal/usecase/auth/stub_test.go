@@ -1,11 +1,11 @@
-package user
+package auth
 
 /*
 Stub do UserRepository.
 
 Responsabilidades:
 - simular o repositório;
-- controlar o retorno do método Save().
+- controlar o retorno do método FindByEmail().
 */
 
 import (
@@ -13,19 +13,16 @@ import (
 )
 
 type userRepositoryStub struct {
-	user *domain.User
-
-	saveError   error
-	findError   error
-	updateError error
+	user             *domain.User
+	findByEmailError error
 }
 
 func (r *userRepositoryStub) Save(user *domain.User) error {
-	return r.saveError
+	return nil
 }
 
 func (r *userRepositoryStub) Update(user *domain.User) error {
-	return r.updateError
+	return nil
 }
 
 func (r *userRepositoryStub) Delete(id string) error {
@@ -33,16 +30,16 @@ func (r *userRepositoryStub) Delete(id string) error {
 }
 
 func (r *userRepositoryStub) FindByID(id string) (*domain.User, error) {
-
-	if r.findError != nil {
-		return nil, r.findError
-	}
-
-	return r.user, nil
+	return nil, nil
 }
 
 func (r *userRepositoryStub) FindByEmail(email string) (*domain.User, error) {
-	return nil, nil
+
+	if r.findByEmailError != nil {
+		return nil, r.findByEmailError
+	}
+
+	return r.user, nil
 }
 
 func (r *userRepositoryStub) FindAll() ([]*domain.User, error) {

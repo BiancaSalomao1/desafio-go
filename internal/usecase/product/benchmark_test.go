@@ -13,16 +13,24 @@ import (
 	"desafio-go/internal/domain"
 )
 
-func BenchmarkCreateProductUseCase_Execute(b *testing.B) {
+func BenchmarkUpdateProductUseCase_Execute(b *testing.B) {
 
-	repository := &productRepositoryStub{}
+	repository := &productRepositoryStub{
+		product: &domain.Product{
+			ID:    "1",
+			Name:  "Notebook",
+			Price: 3500,
+			Stock: 10,
+		},
+	}
 
-	useCase := NewCreateProductUseCase(repository)
+	useCase := NewUpdateProductUseCase(repository)
 
 	product := &domain.Product{
-		Name:  "Notebook",
-		Price: 3500,
-		Stock: 10,
+		ID:    "1",
+		Name:  "Notebook Gamer",
+		Price: 5000,
+		Stock: 15,
 	}
 
 	b.ResetTimer()

@@ -43,36 +43,20 @@ func GenerateToken(
 	)
 }
 
-func ValidateToken(
-	tokenString string,
-	secret string,
-) (jwt.MapClaims, error) {
+func ValidateToken(tokenString, secret string) (jwt.MapClaims, error) {
 
-	token, err := jwt.Parse(
-		tokenString,
-		func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, jwt.ErrTokenSignatureInvalid
-			}
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, jwt.ErrTokenSignatureInvalid
+		}
 
-			return []byte(secret), nil
-		},
-	)
+		return []byte(secret), nil
+	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	if !token.Valid {
-		return nil, jwt.ErrTokenInvalidClaims
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-
-	if !ok {
-		return nil, jwt.ErrTokenInvalidClaims
-	}
-
-	return claims, nil
+	return token.Claims.(jwt.MapClaims), nil
 }

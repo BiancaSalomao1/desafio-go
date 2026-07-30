@@ -13,7 +13,11 @@ import (
 )
 
 type customerRepositoryStub struct {
-	saveError error
+	customer *domain.Customer
+
+	saveError   error
+	findError   error
+	updateError error
 }
 
 func (r *customerRepositoryStub) Save(customer *domain.Customer) error {
@@ -21,7 +25,7 @@ func (r *customerRepositoryStub) Save(customer *domain.Customer) error {
 }
 
 func (r *customerRepositoryStub) Update(customer *domain.Customer) error {
-	return nil
+	return r.updateError
 }
 
 func (r *customerRepositoryStub) Delete(id string) error {
@@ -29,7 +33,12 @@ func (r *customerRepositoryStub) Delete(id string) error {
 }
 
 func (r *customerRepositoryStub) FindByID(id string) (*domain.Customer, error) {
-	return nil, nil
+
+	if r.findError != nil {
+		return nil, r.findError
+	}
+
+	return r.customer, nil
 }
 
 func (r *customerRepositoryStub) FindAll() ([]*domain.Customer, error) {

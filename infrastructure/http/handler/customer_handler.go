@@ -31,24 +31,22 @@ import (
 
 	customerdto "desafio-go/internal/dto/customer"
 	"desafio-go/internal/mapper"
-
-	customerusecase "desafio-go/internal/usecase/customer"
 )
 
 type CustomerHandler struct {
-	createCustomerUseCase *customerusecase.CreateCustomerUseCase
-	getCustomerUseCase    *customerusecase.GetCustomerUseCase
-	listCustomersUseCase  *customerusecase.ListCustomersUseCase
-	updateCustomerUseCase *customerusecase.UpdateCustomerUseCase
-	deleteCustomerUseCase *customerusecase.DeleteCustomerUseCase
+	createCustomerUseCase CreateCustomerUseCase
+	getCustomerUseCase    GetCustomerUseCase
+	listCustomersUseCase  ListCustomersUseCase
+	updateCustomerUseCase UpdateCustomerUseCase
+	deleteCustomerUseCase DeleteCustomerUseCase
 }
 
 func NewCustomerHandler(
-	createCustomerUseCase *customerusecase.CreateCustomerUseCase,
-	getCustomerUseCase *customerusecase.GetCustomerUseCase,
-	listCustomersUseCase *customerusecase.ListCustomersUseCase,
-	updateCustomerUseCase *customerusecase.UpdateCustomerUseCase,
-	deleteCustomerUseCase *customerusecase.DeleteCustomerUseCase,
+	createCustomerUseCase CreateCustomerUseCase,
+	getCustomerUseCase GetCustomerUseCase,
+	listCustomersUseCase ListCustomersUseCase,
+	updateCustomerUseCase UpdateCustomerUseCase,
+	deleteCustomerUseCase DeleteCustomerUseCase,
 ) *CustomerHandler {
 
 	return &CustomerHandler{

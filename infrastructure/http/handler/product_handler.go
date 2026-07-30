@@ -34,26 +34,23 @@ import (
 
 	productdto "desafio-go/internal/dto/product"
 	"desafio-go/internal/mapper"
-
-	productusecase "desafio-go/internal/usecase/product"
 )
 
 type ProductHandler struct {
-	createProductUseCase *productusecase.CreateProductUseCase
-	getProductUseCase    *productusecase.GetProductUseCase
-	listProductsUseCase  *productusecase.ListProductsUseCase
-	updateProductUseCase *productusecase.UpdateProductUseCase
-	deleteProductUseCase *productusecase.DeleteProductUseCase
+	createProductUseCase CreateProductUseCase
+	getProductUseCase    GetProductUseCase
+	listProductsUseCase  ListProductsUseCase
+	updateProductUseCase UpdateProductUseCase
+	deleteProductUseCase DeleteProductUseCase
 }
 
 func NewProductHandler(
-	createProductUseCase *productusecase.CreateProductUseCase,
-	getProductUseCase *productusecase.GetProductUseCase,
-	listProductsUseCase *productusecase.ListProductsUseCase,
-	updateProductUseCase *productusecase.UpdateProductUseCase,
-	deleteProductUseCase *productusecase.DeleteProductUseCase,
+	createProductUseCase CreateProductUseCase,
+	getProductUseCase GetProductUseCase,
+	listProductsUseCase ListProductsUseCase,
+	updateProductUseCase UpdateProductUseCase,
+	deleteProductUseCase DeleteProductUseCase,
 ) *ProductHandler {
-
 	return &ProductHandler{
 		createProductUseCase: createProductUseCase,
 		getProductUseCase:    getProductUseCase,

@@ -1,4 +1,4 @@
-package user
+package auth
 
 /*
 Spy do UserRepository.
@@ -14,30 +14,18 @@ import (
 )
 
 type userRepositorySpy struct {
-	saveCalled bool
-	saveCalls  int
-
-	updateCalled bool
-	updateCalls  int
+	findByEmailCalled bool
+	findByEmailCalls  int
+	email             string
 
 	user *domain.User
 }
 
 func (r *userRepositorySpy) Save(user *domain.User) error {
-
-	r.saveCalled = true
-	r.saveCalls++
-	r.user = user
-
 	return nil
 }
 
 func (r *userRepositorySpy) Update(user *domain.User) error {
-
-	r.updateCalled = true
-	r.updateCalls++
-	r.user = user
-
 	return nil
 }
 
@@ -46,11 +34,16 @@ func (r *userRepositorySpy) Delete(id string) error {
 }
 
 func (r *userRepositorySpy) FindByID(id string) (*domain.User, error) {
-	return r.user, nil
+	return nil, nil
 }
 
 func (r *userRepositorySpy) FindByEmail(email string) (*domain.User, error) {
-	return nil, nil
+
+	r.findByEmailCalled = true
+	r.findByEmailCalls++
+	r.email = email
+
+	return r.user, nil
 }
 
 func (r *userRepositorySpy) FindAll() ([]*domain.User, error) {

@@ -1,4 +1,4 @@
-package user
+package auth
 
 /*
 Mock do UserRepository.
@@ -16,30 +16,19 @@ import (
 )
 
 type userRepositoryMock struct {
-	user *domain.User
+	expectedCalls int
+	currentCalls  int
 
-	expectedSaveCalls int
-	currentSaveCalls  int
-
-	expectedUpdateCalls int
-	currentUpdateCalls  int
-
-	saveError   error
-	updateError error
+	user             *domain.User
+	findByEmailError error
 }
 
 func (r *userRepositoryMock) Save(user *domain.User) error {
-
-	r.currentSaveCalls++
-
-	return r.saveError
+	return nil
 }
 
 func (r *userRepositoryMock) Update(user *domain.User) error {
-
-	r.currentUpdateCalls++
-
-	return r.updateError
+	return nil
 }
 
 func (r *userRepositoryMock) Delete(id string) error {
@@ -47,11 +36,18 @@ func (r *userRepositoryMock) Delete(id string) error {
 }
 
 func (r *userRepositoryMock) FindByID(id string) (*domain.User, error) {
-	return r.user, nil
+	return nil, nil
 }
 
 func (r *userRepositoryMock) FindByEmail(email string) (*domain.User, error) {
-	return nil, nil
+
+	r.currentCalls++
+
+	if r.findByEmailError != nil {
+		return nil, r.findByEmailError
+	}
+
+	return r.user, nil
 }
 
 func (r *userRepositoryMock) FindAll() ([]*domain.User, error) {
@@ -60,12 +56,8 @@ func (r *userRepositoryMock) FindAll() ([]*domain.User, error) {
 
 func (r *userRepositoryMock) Verify() error {
 
-	if r.currentSaveCalls != r.expectedSaveCalls {
-		return errors.New("unexpected number of Save calls")
-	}
-
-	if r.currentUpdateCalls != r.expectedUpdateCalls {
-		return errors.New("unexpected number of Update calls")
+	if r.currentCalls != r.expectedCalls {
+		return errors.New("unexpected number of FindByEmail calls")
 	}
 
 	return nil
