@@ -15,6 +15,7 @@ Funções:
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -44,6 +45,8 @@ func WriteError(
 	err error,
 ) {
 
+	log.Printf("WRITE ERROR: %T - %q", err, err.Error())
+
 	WriteJSON(
 		w,
 		status,
@@ -52,16 +55,6 @@ func WriteError(
 		},
 	)
 }
-
-/*
-WriteStatus
-
-Responsabilidades:
-- retornar apenas o status HTTP.
-
-Funções:
-- WriteStatus()
-*/
 
 func WriteStatus(
 	w http.ResponseWriter,
