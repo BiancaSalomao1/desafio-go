@@ -50,4 +50,6 @@ var (
 	ErrUserEmailRequired  = errors.New("user email required")
 	ErrPasswordRequired   = errors.New("password required")
 	ErrInvalidCredentials = errors.New("invalid credentials")
+
+	ErrInternal = errors.New("internal server error")
 )
