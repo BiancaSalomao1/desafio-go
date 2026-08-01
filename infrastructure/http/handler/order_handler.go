@@ -26,9 +26,12 @@ Métodos:
 */
 
 import (
+	"errors"
+	"log"
 	"net/http"
 
 	"desafio-go/infrastructure/http/httpx"
+	"desafio-go/internal/domain"
 
 	orderdto "desafio-go/internal/dto/order"
 	"desafio-go/internal/mapper"
@@ -169,6 +172,19 @@ func (h *OrderHandler) Pay(
 
 	if err := h.payOrderUseCase.Execute(id); err != nil {
 
+		log.Printf("PAY ERROR: %T - %v", err, err)
+
+		if errors.Is(err, domain.ErrOrderNotFound) {
+
+			httpx.WriteError(
+				w,
+				http.StatusNotFound,
+				err,
+			)
+
+			return
+		}
+
 		httpx.WriteError(
 			w,
 			http.StatusBadRequest,
@@ -203,6 +219,19 @@ func (h *OrderHandler) Cancel(
 	id := r.PathValue("id")
 
 	if err := h.cancelOrderUseCase.Execute(id); err != nil {
+
+		log.Printf("CANCEL ERROR: %T - %v", err, err)
+
+		if errors.Is(err, domain.ErrOrderNotFound) {
+
+			httpx.WriteError(
+				w,
+				http.StatusNotFound,
+				err,
+			)
+
+			return
+		}
 
 		httpx.WriteError(
 			w,

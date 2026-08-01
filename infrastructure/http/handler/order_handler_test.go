@@ -212,11 +212,11 @@ func TestOrderHandler_Create(t *testing.T) {
 		)
 	})
 
-	t.Run("should return bad request when usecase returns error", func(t *testing.T) {
+	t.Run("should return not found when order does not exist", func(t *testing.T) {
 
 		mock := &createOrderUseCaseMock{
 			execute: func(order *domain.Order) error {
-				return errors.New("customer not found")
+				return domain.ErrCustomerNotFound
 			},
 		}
 
@@ -333,7 +333,7 @@ func TestOrderHandler_GetByID(t *testing.T) {
 
 		mock := &getOrderUseCaseMock{
 			execute: func(id string) (*domain.Order, error) {
-				return nil, errors.New("order not found")
+				return nil, domain.ErrOrderNotFound
 			},
 		}
 
@@ -418,11 +418,11 @@ func TestOrderHandler_Pay(t *testing.T) {
 		)
 	})
 
-	t.Run("should return bad request when usecase returns error", func(t *testing.T) {
+	t.Run("should return not found when order does not exist", func(t *testing.T) {
 
 		mock := &payOrderUseCaseMock{
 			execute: func(id string) error {
-				return errors.New("order not found")
+				return domain.ErrOrderNotFound
 			},
 		}
 
@@ -449,7 +449,7 @@ func TestOrderHandler_Pay(t *testing.T) {
 		testutil.AssertStatus(
 			t,
 			rec,
-			http.StatusBadRequest,
+			http.StatusNotFound,
 		)
 
 		testutil.AssertContentTypeJSON(
@@ -507,11 +507,11 @@ func TestOrderHandler_Cancel(t *testing.T) {
 		)
 	})
 
-	t.Run("should return bad request when usecase returns error", func(t *testing.T) {
+	t.Run("should return not found when order does not exist", func(t *testing.T) {
 
 		mock := &cancelOrderUseCaseMock{
 			execute: func(id string) error {
-				return errors.New("order not found")
+				return domain.ErrOrderNotFound
 			},
 		}
 
@@ -538,7 +538,7 @@ func TestOrderHandler_Cancel(t *testing.T) {
 		testutil.AssertStatus(
 			t,
 			rec,
-			http.StatusBadRequest,
+			http.StatusNotFound,
 		)
 
 		testutil.AssertContentTypeJSON(
