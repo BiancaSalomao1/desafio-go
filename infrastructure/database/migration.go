@@ -1,14 +1,10 @@
 package database
 
-/*
-Executa as migrations da aplicação.
-
-Métodos:
-- RunMigrations()
-*/
-
 import (
 	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -17,17 +13,29 @@ import (
 
 func RunMigrations(databaseURL string) error {
 
+	root, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	migrations := filepath.Join(root, "migrations")
+
+	// Caso esteja executando a partir de tests/integration
+	if _, err := os.Stat(migrations); os.IsNotExist(err) {
+		migrations = filepath.Join(root, "..", "..", "migrations")
+	}
+
+	sourceURL := fmt.Sprintf("file://%s", migrations)
+
 	m, err := migrate.New(
-		"file://migrations",
+		sourceURL,
 		databaseURL,
 	)
 	if err != nil {
 		return err
 	}
 
-	err = m.Up()
-
-	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return err
 	}
 
