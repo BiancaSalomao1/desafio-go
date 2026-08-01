@@ -33,6 +33,7 @@ var (
 
 	ErrOrderNotFound       = errors.New("order not found")
 	ErrEmptyOrder          = errors.New("empty order")
+	ErrDuplicatedProduct   = errors.New("duplicated product in order")
 	ErrOrderStatusInvalid  = errors.New("order status invalid")
 	ErrChangeStatusInvalid = errors.New("change status invalid")
 

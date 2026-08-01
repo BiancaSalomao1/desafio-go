@@ -53,6 +53,17 @@ func (uc *CreateOrderUseCase) Execute(order *domain.Order) error {
 
 		products := make(map[string]*domain.Product)
 
+		seen := make(map[string]struct{})
+
+		for _, item := range order.Items {
+
+			if _, exists := seen[item.ProductID]; exists {
+				return domain.ErrDuplicatedProduct
+			}
+
+			seen[item.ProductID] = struct{}{}
+		}
+
 		for i := range order.Items {
 
 			product, err := productRepository.FindByID(order.Items[i].ProductID)

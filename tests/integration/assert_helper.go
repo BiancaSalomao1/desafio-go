@@ -78,3 +78,15 @@ func assertNotFound(
 	t.Helper()
 	assertStatus(t, resp, http.StatusNotFound)
 }
+
+func assertConflict(t *testing.T, resp *http.Response) {
+	t.Helper()
+
+	if resp.StatusCode != http.StatusConflict {
+		t.Fatalf(
+			"expected status %d got %d",
+			http.StatusConflict,
+			resp.StatusCode,
+		)
+	}
+}

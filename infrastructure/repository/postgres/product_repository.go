@@ -112,6 +112,7 @@ func (r *ProductPostgresRepository) FindByID(id string) (*domain.Product, error)
 			stock
 		FROM products
 		WHERE id = $1
+		FOR UPDATE
 	`
 
 	product := &domain.Product{}

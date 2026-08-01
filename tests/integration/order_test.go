@@ -44,8 +44,10 @@ package integration
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 	"testing"
 
 	customerdto "desafio-go/internal/dto/customer"
@@ -218,7 +220,7 @@ func TestCreateOrderCustomerNotFound(t *testing.T) {
 	resp := doRequest(t, req)
 	defer resp.Body.Close()
 
-	assertBadRequest(t, resp)
+	assertNotFound(t, resp)
 }
 
 func TestCreateOrderProductNotFound(t *testing.T) {
@@ -258,7 +260,7 @@ func TestCreateOrderProductNotFound(t *testing.T) {
 	resp := doRequest(t, req)
 	defer resp.Body.Close()
 
-	assertBadRequest(t, resp)
+	assertNotFound(t, resp)
 }
 
 func TestCreateOrderQuantityZero(t *testing.T) {
@@ -387,7 +389,7 @@ func TestCreateOrderInsufficientStock(t *testing.T) {
 	resp := doRequest(t, req)
 	defer resp.Body.Close()
 
-	assertBadRequest(t, resp)
+	assertConflict(t, resp)
 }
 
 func TestCreateOrderMultipleProducts(t *testing.T) {
@@ -893,7 +895,7 @@ func TestPayOrderTwice(t *testing.T) {
 	resp = doRequest(t, req)
 	defer resp.Body.Close()
 
-	assertBadRequest(t, resp)
+	assertConflict(t, resp)
 }
 
 func TestPayOrderNotFound(t *testing.T) {
@@ -981,6 +983,18 @@ func TestPayOrderStatusTransition(t *testing.T) {
 	resp.Body.Close()
 
 	assertNoContent(t, resp)
+
+	req, _ = authenticatedRequest(
+		http.MethodPatch,
+		ts.Server.URL+"/orders/"+order.ID+"/pay",
+		token,
+		nil,
+	)
+
+	resp = doRequest(t, req)
+	defer resp.Body.Close()
+
+	assertConflict(t, resp)
 
 	req, _ = authenticatedRequest(
 		http.MethodGet,
@@ -1132,7 +1146,7 @@ func TestCancelOrderTwice(t *testing.T) {
 	resp = doRequest(t, req)
 	defer resp.Body.Close()
 
-	assertBadRequest(t, resp)
+	assertConflict(t, resp)
 }
 
 func TestCancelPaidOrder(t *testing.T) {
@@ -1200,7 +1214,7 @@ func TestCancelPaidOrder(t *testing.T) {
 	resp = doRequest(t, req)
 	defer resp.Body.Close()
 
-	assertBadRequest(t, resp)
+	assertConflict(t, resp)
 }
 
 func TestCancelOrderNotFound(t *testing.T) {
@@ -1473,7 +1487,7 @@ func TestStockNeverBecomesNegative(t *testing.T) {
 	resp := doRequest(t, req)
 	resp.Body.Close()
 
-	assertBadRequest(t, resp)
+	assertConflict(t, resp)
 
 	req, _ = authenticatedRequest(
 		http.MethodGet,
@@ -1690,4 +1704,168 @@ func TestGetOrderInvalidToken(t *testing.T) {
 	defer resp.Body.Close()
 
 	assertUnauthorized(t, resp)
+}
+
+func TestCreateOrderDuplicatedProduct(t *testing.T) {
+
+	ts := setup(t)
+	defer teardown(ts)
+
+	token := createAuthenticatedUser(t, ts)
+
+	customer := createCustomer(
+		t,
+		ts,
+		token,
+		customerdto.CreateCustomerRequest{
+			Name:  "Cliente",
+			Email: "cliente@email.com",
+		},
+	)
+
+	product := createProduct(
+		t,
+		ts,
+		token,
+		productdto.CreateProductRequest{
+			Name:  "Notebook",
+			Price: 5000,
+			Stock: 10,
+		},
+	)
+
+	request := orderdto.CreateOrderRequest{
+		CustomerID: customer.ID,
+		Items: []orderdto.CreateOrderItemRequest{
+			{
+				ProductID: product.ID,
+				Quantity:  2,
+			},
+			{
+				ProductID: product.ID,
+				Quantity:  3,
+			},
+		},
+	}
+
+	body, err := json.Marshal(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := authenticatedRequest(
+		http.MethodPost,
+		ts.Server.URL+"/orders",
+		token,
+		bytes.NewBuffer(body),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusConflict {
+		t.Fatalf(
+			"expected %d got %d",
+			http.StatusConflict,
+			resp.StatusCode,
+		)
+	}
+}
+
+func TestCreateOrderConcurrentStock(t *testing.T) {
+
+	ts := setup(t)
+	defer teardown(ts)
+
+	token := createAuthenticatedUser(t, ts)
+
+	customer := createCustomer(
+		t,
+		ts,
+		token,
+		customerdto.CreateCustomerRequest{
+			Name:  "Cliente Teste",
+			Email: "cliente@teste.com",
+		},
+	)
+
+	product := createProduct(
+		t,
+		ts,
+		token,
+		productdto.CreateProductRequest{
+			Name:  "Notebook",
+			Price: 5000,
+			Stock: 5,
+		},
+	)
+	var wg sync.WaitGroup
+
+	statuses := make(chan int, 2)
+
+	create := func() {
+		defer wg.Done()
+
+		request := orderdto.CreateOrderRequest{
+			CustomerID: customer.ID,
+			Items: []orderdto.CreateOrderItemRequest{
+				{
+					ProductID: product.ID,
+					Quantity:  5,
+				},
+			},
+		}
+
+		body, _ := json.Marshal(request)
+
+		req, _ := authenticatedRequest(
+			http.MethodPost,
+			ts.Server.URL+"/orders",
+			token,
+			bytes.NewBuffer(body),
+		)
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		defer resp.Body.Close()
+
+		statuses <- resp.StatusCode
+	}
+
+	wg.Add(2)
+
+	go create()
+	go create()
+
+	wg.Wait()
+	close(statuses)
+
+	var created int
+	var failed int
+
+	for status := range statuses {
+		switch status {
+		case http.StatusCreated:
+			created++
+		default:
+			failed++
+		}
+	}
+
+	if created != 1 {
+		t.Fatalf("expected 1 created order, got %d", created)
+	}
+
+	if failed != 1 {
+		t.Fatalf("expected 1 failed order, got %d", failed)
+	}
 }

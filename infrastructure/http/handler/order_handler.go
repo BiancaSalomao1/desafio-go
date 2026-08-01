@@ -27,7 +27,6 @@ Métodos:
 
 import (
 	"errors"
-	"log"
 	"net/http"
 
 	"desafio-go/infrastructure/http/httpx"
@@ -72,8 +71,10 @@ func NewOrderHandler(
 // @Accept json
 // @Produce json
 // @Param request body order.CreateOrderRequest true "Pedido"
-// @Success 201 {object} order.OrderResponse
+// @Success 204
 // @Failure 400 {object} httpx.ErrorResponse
+// @Failure 404 {object} httpx.ErrorResponse
+// @Failure 409 {object} httpx.ErrorResponse
 // @Security BearerAuth
 // @Router /orders [post]
 func (h *OrderHandler) Create(
@@ -98,11 +99,36 @@ func (h *OrderHandler) Create(
 
 	if err := h.createOrderUseCase.Execute(order); err != nil {
 
-		httpx.WriteError(
-			w,
-			http.StatusBadRequest,
-			err,
-		)
+		switch {
+
+		case errors.Is(err, domain.ErrCustomerNotFound),
+			errors.Is(err, domain.ErrProductNotFound):
+
+			httpx.WriteError(
+				w,
+				http.StatusNotFound,
+				err,
+			)
+
+		case errors.Is(err, domain.ErrInsufficientStock),
+			errors.Is(err, domain.ErrOrderStatusInvalid),
+			errors.Is(err, domain.ErrChangeStatusInvalid),
+			errors.Is(err, domain.ErrDuplicatedProduct):
+
+			httpx.WriteError(
+				w,
+				http.StatusConflict,
+				err,
+			)
+
+		default:
+
+			httpx.WriteError(
+				w,
+				http.StatusBadRequest,
+				err,
+			)
+		}
 
 		return
 	}
@@ -161,6 +187,8 @@ func (h *OrderHandler) GetByID(
 // @Param id path string true "ID"
 // @Success 204
 // @Failure 400 {object} httpx.ErrorResponse
+// @Failure 404 {object} httpx.ErrorResponse
+// @Failure 409 {object} httpx.ErrorResponse
 // @Security BearerAuth
 // @Router /orders/{id}/pay [patch]
 func (h *OrderHandler) Pay(
@@ -172,9 +200,9 @@ func (h *OrderHandler) Pay(
 
 	if err := h.payOrderUseCase.Execute(id); err != nil {
 
-		log.Printf("PAY ERROR: %T - %v", err, err)
+		switch {
 
-		if errors.Is(err, domain.ErrOrderNotFound) {
+		case errors.Is(err, domain.ErrOrderNotFound):
 
 			httpx.WriteError(
 				w,
@@ -182,14 +210,23 @@ func (h *OrderHandler) Pay(
 				err,
 			)
 
-			return
-		}
+		case errors.Is(err, domain.ErrOrderStatusInvalid),
+			errors.Is(err, domain.ErrChangeStatusInvalid):
 
-		httpx.WriteError(
-			w,
-			http.StatusBadRequest,
-			err,
-		)
+			httpx.WriteError(
+				w,
+				http.StatusConflict,
+				err,
+			)
+
+		default:
+
+			httpx.WriteError(
+				w,
+				http.StatusBadRequest,
+				err,
+			)
+		}
 
 		return
 	}
@@ -220,9 +257,9 @@ func (h *OrderHandler) Cancel(
 
 	if err := h.cancelOrderUseCase.Execute(id); err != nil {
 
-		log.Printf("CANCEL ERROR: %T - %v", err, err)
+		switch {
 
-		if errors.Is(err, domain.ErrOrderNotFound) {
+		case errors.Is(err, domain.ErrOrderNotFound):
 
 			httpx.WriteError(
 				w,
@@ -230,14 +267,23 @@ func (h *OrderHandler) Cancel(
 				err,
 			)
 
-			return
-		}
+		case errors.Is(err, domain.ErrOrderStatusInvalid),
+			errors.Is(err, domain.ErrChangeStatusInvalid):
 
-		httpx.WriteError(
-			w,
-			http.StatusBadRequest,
-			err,
-		)
+			httpx.WriteError(
+				w,
+				http.StatusConflict,
+				err,
+			)
+
+		default:
+
+			httpx.WriteError(
+				w,
+				http.StatusBadRequest,
+				err,
+			)
+		}
 
 		return
 	}

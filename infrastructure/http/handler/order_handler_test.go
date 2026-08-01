@@ -212,7 +212,7 @@ func TestOrderHandler_Create(t *testing.T) {
 		)
 	})
 
-	t.Run("should return not found when order does not exist", func(t *testing.T) {
+	t.Run("should return not found when customer does not exist", func(t *testing.T) {
 
 		mock := &createOrderUseCaseMock{
 			execute: func(order *domain.Order) error {
@@ -249,7 +249,7 @@ func TestOrderHandler_Create(t *testing.T) {
 		testutil.AssertStatus(
 			t,
 			rec,
-			http.StatusBadRequest,
+			http.StatusNotFound,
 		)
 
 		testutil.AssertContentTypeJSON(
