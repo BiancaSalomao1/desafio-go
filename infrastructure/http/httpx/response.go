@@ -48,7 +48,7 @@ func WriteError(
 		w,
 		status,
 		ErrorResponse{
-			Error: err.Error(),
+			Error: errorMessage(err),
 		},
 	)
 }

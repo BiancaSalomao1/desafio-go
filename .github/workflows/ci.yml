@@ -2,18 +2,39 @@ name: Go CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
-
   build:
 
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: app
+
+        ports:
+          - 5433:5432
+
+        options: >-
+          --health-cmd="pg_isready -U app"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      APP_PORT: "8080"
+      DATABASE_URL: postgres://app:app@localhost:5433/app?sslmode=disable
+      JWT_SECRET: test-secret
+      JWT_EXPIRES_IN: 1h
 
     steps:
 
@@ -43,7 +64,7 @@ jobs:
         run: go vet ./...
 
       - name: Tests
-        run: go test ./...
+        run: go test -count=1 ./...
 
       - name: Build
         run: go build ./...
