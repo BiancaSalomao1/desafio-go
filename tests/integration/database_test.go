@@ -17,13 +17,13 @@ Seu objetivo é garantir que cada teste execute em um banco limpo.
 
 import (
 	"context"
-	"desafio-go/infrastructure/database"
 	"testing"
+
+	"desafio-go/config"
+	"desafio-go/infrastructure/database"
 
 	"github.com/jackc/pgx/v5"
 )
-
-const connectionString = "postgres://postgres:postgres@localhost:5432/desafio_go"
 
 func connectDatabase(
 	t *testing.T,
@@ -31,11 +31,12 @@ func connectDatabase(
 
 	t.Helper()
 
+	cfg := config.Load()
+
 	db, err := pgx.Connect(
 		context.Background(),
-		connectionString,
+		cfg.DatabaseURL,
 	)
-
 	if err != nil {
 		t.Fatalf("error connecting database: %v", err)
 	}

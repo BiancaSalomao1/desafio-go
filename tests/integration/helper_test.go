@@ -55,6 +55,11 @@ func setup(t *testing.T) *TestServer {
 	// Carrega configurações
 	cfg := config.Load()
 
+	// Executa as migrations
+	if err := database.RunMigrations(cfg.DatabaseURL); err != nil {
+		t.Fatalf("error running migrations: %v", err)
+	}
+
 	// Conecta ao banco
 	db, err := database.New(cfg)
 	if err != nil {
@@ -71,7 +76,6 @@ func setup(t *testing.T) *TestServer {
 		t.Fatalf("error creating application: %v", err)
 	}
 
-	// Inicia servidor HTTP de testes
 	server := httptest.NewServer(httpHandler)
 
 	return &TestServer{
