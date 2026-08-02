@@ -1,12 +1,5 @@
 package auth
 
-/*
-Benchmark do LoginUseCase.
-
-Responsabilidades:
-- medir desempenho da autenticação.
-*/
-
 import (
 	"testing"
 	"time"
@@ -20,12 +13,12 @@ func BenchmarkLoginUseCase_Execute(b *testing.B) {
 	hash, _ := security.HashPassword("123456")
 
 	repository := &userRepositoryStub{
-		user: &domain.User{
-			ID:           "1",
-			Name:         "Administrador",
-			Email:        "admin@email.com",
-			PasswordHash: hash,
-		},
+		user: domain.NewUser(
+			"1",
+			"Administrador",
+			"admin@email.com",
+			hash,
+		),
 	}
 
 	useCase := NewLoginUseCase(

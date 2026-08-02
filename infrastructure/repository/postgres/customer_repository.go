@@ -42,11 +42,21 @@ func NewCustomerRepository(db repository.DBTX) repository.CustomerRepository {
 func (r *CustomerPostgresRepository) Save(customer *domain.Customer) error {
 
 	query := `
-		INSERT INTO customers
-			(id, name, email)
-		VALUES
-			($1, $2, $3)
-	`
+INSERT INTO customers
+(
+	id,
+	name,
+	email,
+	password_hash
+)
+VALUES
+(
+	$1,
+	$2,
+	$3,
+	$4
+)
+`
 
 	_, err := r.db.Exec(
 		context.Background(),
@@ -54,6 +64,7 @@ func (r *CustomerPostgresRepository) Save(customer *domain.Customer) error {
 		customer.ID,
 		customer.Name,
 		customer.Email,
+		customer.PasswordHash,
 	)
 
 	return err
@@ -66,6 +77,7 @@ func (r *CustomerPostgresRepository) Update(customer *domain.Customer) error {
 		SET
 			name = $2,
 			email = $3,
+			password_hash = $4,
 			updated_at = NOW()
 		WHERE id = $1
 	`
@@ -76,6 +88,7 @@ func (r *CustomerPostgresRepository) Update(customer *domain.Customer) error {
 		customer.ID,
 		customer.Name,
 		customer.Email,
+		customer.PasswordHash,
 	)
 
 	return err
@@ -98,7 +111,7 @@ func (r *CustomerPostgresRepository) FindByID(id string) (*domain.Customer, erro
 
 	err := r.db.QueryRow(
 		context.Background(),
-		`SELECT id,name,email
+		`SELECT id,name,email, password_hash
 		 FROM customers
 		 WHERE id=$1`,
 		id,
@@ -106,6 +119,7 @@ func (r *CustomerPostgresRepository) FindByID(id string) (*domain.Customer, erro
 		&customer.ID,
 		&customer.Name,
 		&customer.Email,
+		&customer.PasswordHash,
 	)
 
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -123,7 +137,7 @@ func (r *CustomerPostgresRepository) FindAll() ([]*domain.Customer, error) {
 
 	rows, err := r.db.Query(
 		context.Background(),
-		`SELECT id,name,email
+		`SELECT id,name,email,password_hash
 		 FROM customers
 		 ORDER BY name`,
 	)
@@ -144,6 +158,7 @@ func (r *CustomerPostgresRepository) FindAll() ([]*domain.Customer, error) {
 			&customer.ID,
 			&customer.Name,
 			&customer.Email,
+			&customer.PasswordHash,
 		)
 
 		if err != nil {
@@ -158,4 +173,32 @@ func (r *CustomerPostgresRepository) FindAll() ([]*domain.Customer, error) {
 	}
 
 	return customers, nil
+}
+
+func (r *CustomerPostgresRepository) FindByEmail(email string) (*domain.Customer, error) {
+
+	customer := &domain.Customer{}
+
+	err := r.db.QueryRow(
+		context.Background(),
+		`SELECT id,name,email,password_hash
+		 FROM customers
+		 WHERE email=$1`,
+		email,
+	).Scan(
+		&customer.ID,
+		&customer.Name,
+		&customer.Email,
+		&customer.PasswordHash,
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, domain.ErrCustomerNotFound
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return customer, nil
 }

@@ -1,19 +1,19 @@
+package mapper
+
 /*
-Função ToCustomerUpdate
+Função ToCustomer
 
 Responsabilidades:
-- converter um funções CustomerRequest em Customer.
+- converter DTOs de cliente para domínio;
+- converter domínio para DTO de resposta.
 
 Métodos:
-- ToCustomer
-- ToUpdatedCustomer
-- ToCustomerResponse
-- ToCustomerResponseList
+- ToCustomer()
+- ToUpdatedCustomer()
+- ToCustomerResponse()
+- ToCustomerResponseList()
 - ToCustomerUpdate()
-- ToCustomerDelete()
 */
-
-package mapper
 
 import (
 	"desafio-go/internal/domain"
@@ -26,11 +26,16 @@ func ToCustomer(
 	request customerdto.CreateCustomerRequest,
 ) *domain.Customer {
 
-	return domain.NewCustomer(
+	customer := domain.NewCustomer(
 		uuid.NewString(),
 		request.Name,
 		request.Email,
+		"",
 	)
+
+	customer.Password = request.Password
+
+	return customer
 }
 
 func ToUpdatedCustomer(
@@ -42,6 +47,7 @@ func ToUpdatedCustomer(
 		id,
 		request.Name,
 		request.Email,
+		"",
 	)
 }
 
@@ -67,7 +73,6 @@ func ToCustomerResponseList(
 	)
 
 	for _, customer := range customers {
-
 		response = append(
 			response,
 			ToCustomerResponse(customer),
@@ -86,5 +91,6 @@ func ToCustomerUpdate(
 		id,
 		request.Name,
 		request.Email,
+		"",
 	)
 }

@@ -31,15 +31,21 @@ func TestCreateCustomerUseCase_Execute(t *testing.T) {
 
 		useCase := NewCreateCustomerUseCase(repository)
 
-		customer := &domain.Customer{
-			Name:  "João da Silva",
-			Email: "joao@email.com",
-		}
+		customer := domain.NewCustomer(
+			"1",
+			"João da Silva",
+			"joao@email.com",
+			"",
+		)
 
 		err := useCase.Execute(customer)
 
 		if err != nil {
 			t.Fatalf("expected nil, got %v", err)
+		}
+
+		if customer.PasswordHash == "" {
+			t.Fatal("expected password hash to be generated")
 		}
 	})
 
@@ -66,10 +72,12 @@ func TestCreateCustomerUseCase_Execute(t *testing.T) {
 
 		useCase := NewCreateCustomerUseCase(repository)
 
-		customer := &domain.Customer{
-			Name:  "João da Silva",
-			Email: "joao@email.com",
-		}
+		customer := domain.NewCustomer(
+			"1",
+			"João da Silva",
+			"joao@email.com",
+			"",
+		)
 
 		err := useCase.Execute(customer)
 
@@ -88,10 +96,12 @@ func TestCreateCustomerUseCase_Execute(t *testing.T) {
 
 		useCase := NewCreateCustomerUseCase(repository)
 
-		customer := &domain.Customer{
-			Name:  "João da Silva",
-			Email: "joao@email.com",
-		}
+		customer := domain.NewCustomer(
+			"1",
+			"João da Silva",
+			"joao@email.com",
+			"",
+		)
 
 		err := useCase.Execute(customer)
 
@@ -110,6 +120,10 @@ func TestCreateCustomerUseCase_Execute(t *testing.T) {
 		if repository.customer != customer {
 			t.Fatal("expected same customer instance")
 		}
+
+		if customer.PasswordHash == "" {
+			t.Fatal("expected password hash to be generated")
+		}
 	})
 
 	t.Run("should satisfy mock expectations", func(t *testing.T) {
@@ -120,10 +134,12 @@ func TestCreateCustomerUseCase_Execute(t *testing.T) {
 
 		useCase := NewCreateCustomerUseCase(repository)
 
-		customer := &domain.Customer{
-			Name:  "João da Silva",
-			Email: "joao@email.com",
-		}
+		customer := domain.NewCustomer(
+			"1",
+			"João da Silva",
+			"joao@email.com",
+			"",
+		)
 
 		err := useCase.Execute(customer)
 
@@ -131,9 +147,11 @@ func TestCreateCustomerUseCase_Execute(t *testing.T) {
 			t.Fatalf("expected nil, got %v", err)
 		}
 
-		err = repository.Verify()
+		if customer.PasswordHash == "" {
+			t.Fatal("expected password hash to be generated")
+		}
 
-		if err != nil {
+		if err := repository.Verify(); err != nil {
 			t.Fatal(err)
 		}
 	})

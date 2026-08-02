@@ -14,6 +14,7 @@ Métodos:
 - Update()
 - Delete()
 - FindByID()
+- FindByEmail()
 - FindAll()
 */
 
@@ -78,6 +79,18 @@ func (r *MemoryCustomerRepository) FindByID(id string) (*domain.Customer, error)
 	}
 
 	return customer, nil
+}
+
+func (r *MemoryCustomerRepository) FindByEmail(email string) (*domain.Customer, error) {
+
+	for _, customer := range r.customers {
+
+		if customer.Email == email {
+			return customer, nil
+		}
+	}
+
+	return nil, domain.ErrCustomerNotFound
 }
 
 func (r *MemoryCustomerRepository) FindAll() ([]*domain.Customer, error) {

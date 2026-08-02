@@ -3,6 +3,8 @@ package domain
 import (
 	"errors"
 	"testing"
+
+	"desafio-go/internal/security"
 )
 
 func TestNewCustomer(t *testing.T) {
@@ -11,6 +13,7 @@ func TestNewCustomer(t *testing.T) {
 		"1",
 		"João",
 		"joao@email.com",
+		"hash",
 	)
 
 	if customer == nil {
@@ -28,6 +31,10 @@ func TestNewCustomer(t *testing.T) {
 	if customer.Email != "joao@email.com" {
 		t.Fatalf("expected joao@email.com, got %s", customer.Email)
 	}
+
+	if customer.PasswordHash != "hash" {
+		t.Fatalf("expected hash, got %s", customer.PasswordHash)
+	}
 }
 
 func TestCustomer_Validate(t *testing.T) {
@@ -40,26 +47,38 @@ func TestCustomer_Validate(t *testing.T) {
 		{
 			name: "valid customer",
 			customer: Customer{
-				Name:  "João",
-				Email: "joao@email.com",
+				Name:         "João",
+				Email:        "joao@email.com",
+				PasswordHash: "hash",
 			},
 			expectedErr: nil,
 		},
 		{
 			name: "empty name",
 			customer: Customer{
-				Name:  "",
-				Email: "joao@email.com",
+				Name:         "",
+				Email:        "joao@email.com",
+				PasswordHash: "hash",
 			},
 			expectedErr: ErrCustomerInvalid,
 		},
 		{
 			name: "empty email",
 			customer: Customer{
-				Name:  "João",
-				Email: "",
+				Name:         "João",
+				Email:        "",
+				PasswordHash: "hash",
 			},
 			expectedErr: ErrCustomerInvalid,
+		},
+		{
+			name: "empty password hash",
+			customer: Customer{
+				Name:         "João",
+				Email:        "joao@email.com",
+				PasswordHash: "",
+			},
+			expectedErr: ErrPasswordRequired,
 		},
 	}
 
@@ -85,8 +104,9 @@ func TestCustomer_Update(t *testing.T) {
 	t.Run("should update customer", func(t *testing.T) {
 
 		customer := Customer{
-			Name:  "João",
-			Email: "joao@email.com",
+			Name:         "João",
+			Email:        "joao@email.com",
+			PasswordHash: "hash",
 		}
 
 		err := customer.Update(
@@ -116,8 +136,9 @@ func TestCustomer_Update(t *testing.T) {
 	t.Run("should return validation error", func(t *testing.T) {
 
 		customer := Customer{
-			Name:  "João",
-			Email: "joao@email.com",
+			Name:         "João",
+			Email:        "joao@email.com",
+			PasswordHash: "hash",
 		}
 
 		err := customer.Update(
@@ -131,6 +152,45 @@ func TestCustomer_Update(t *testing.T) {
 				ErrCustomerInvalid,
 				err,
 			)
+		}
+	})
+}
+
+func TestCustomer_CheckPassword(t *testing.T) {
+
+	t.Run("should return true for correct password", func(t *testing.T) {
+
+		password := "mysecretpassword"
+
+		passwordHash, err := security.HashPassword(password)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		customer := Customer{
+			PasswordHash: passwordHash,
+		}
+
+		if !customer.CheckPassword(password) {
+			t.Fatal("expected true, got false")
+		}
+	})
+
+	t.Run("should return false for incorrect password", func(t *testing.T) {
+
+		password := "mysecretpassword"
+
+		passwordHash, err := security.HashPassword(password)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		customer := Customer{
+			PasswordHash: passwordHash,
+		}
+
+		if customer.CheckPassword("wrongpassword") {
+			t.Fatal("expected false, got true")
 		}
 	})
 }

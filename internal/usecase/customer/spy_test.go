@@ -52,3 +52,9 @@ func (r *customerRepositorySpy) FindByID(id string) (*domain.Customer, error) {
 func (r *customerRepositorySpy) FindAll() ([]*domain.Customer, error) {
 	return nil, nil
 }
+func (r *customerRepositorySpy) FindByEmail(
+	email string,
+) (*domain.Customer, error) {
+
+	return r.customer, nil
+}

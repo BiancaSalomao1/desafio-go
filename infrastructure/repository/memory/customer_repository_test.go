@@ -15,6 +15,7 @@ func newValidCustomer() *domain.Customer {
 		"CUS001",
 		"João Silva",
 		"joao@email.com",
+		"joaohash",
 	)
 }
 
@@ -46,6 +47,7 @@ func TestCustomerSave_InvalidCustomer(t *testing.T) {
 	repo := newCustomerRepository()
 
 	customer := domain.NewCustomer(
+		"",
 		"",
 		"",
 		"",
@@ -184,12 +186,14 @@ func TestCustomerFindAll(t *testing.T) {
 		"1",
 		"João",
 		"joao@email.com",
+		"joaohash",
 	))
 
 	_ = repo.Save(domain.NewCustomer(
 		"2",
 		"Maria",
 		"maria@email.com",
+		"mariahash",
 	))
 
 	customers, err := repo.FindAll()

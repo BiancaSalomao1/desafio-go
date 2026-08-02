@@ -12,9 +12,9 @@ Métodos:
 */
 
 import (
-	"errors"
 	"time"
 
+	"desafio-go/internal/domain"
 	"desafio-go/internal/security"
 
 	"desafio-go/internal/repository"
@@ -51,7 +51,7 @@ func (uc *LoginUseCase) Execute(
 	}
 
 	if !user.CheckPassword(password) {
-		return "", errors.New("invalid credentials")
+		return "", domain.ErrInvalidCredentials
 	}
 
 	token, err := security.GenerateToken(

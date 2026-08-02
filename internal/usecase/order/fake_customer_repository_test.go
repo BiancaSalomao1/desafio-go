@@ -65,3 +65,13 @@ func (r *FakeCustomerRepository) FindByID(id string) (*domain.Customer, error) {
 func (r *FakeCustomerRepository) FindAll() ([]*domain.Customer, error) {
 	return nil, nil
 }
+func (r *FakeCustomerRepository) FindByEmail(
+	email string,
+) (*domain.Customer, error) {
+
+	if r.customer != nil && r.customer.Email == email {
+		return r.customer, nil
+	}
+
+	return nil, domain.ErrCustomerNotFound
+}

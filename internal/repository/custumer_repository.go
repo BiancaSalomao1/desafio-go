@@ -26,5 +26,6 @@ type CustomerRepository interface {
 	Update(customer *domain.Customer) error
 	Delete(id string) error
 	FindByID(id string) (*domain.Customer, error)
+	FindByEmail(email string) (*domain.Customer, error) // <- existe?
 	FindAll() ([]*domain.Customer, error)
 }

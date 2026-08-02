@@ -27,6 +27,14 @@ func TestToCustomer(t *testing.T) {
 	if customer.Email != request.Email {
 		t.Fatalf("expected %s, got %s", request.Email, customer.Email)
 	}
+
+	if customer.PasswordHash != "" {
+		t.Fatalf(
+			"expected empty password hash, got %q",
+			customer.PasswordHash,
+		)
+	}
+
 }
 
 func TestToCustomerUpdate(t *testing.T) {
@@ -60,6 +68,7 @@ func TestToCustomerResponse(t *testing.T) {
 		"CUST001",
 		"João Silva",
 		"joao@email.com",
+		"hash",
 	)
 
 	response := ToCustomerResponse(customer)
@@ -84,11 +93,13 @@ func TestToCustomerResponseList(t *testing.T) {
 			"CUST001",
 			"João Silva",
 			"joao@email.com",
+			"hash1",
 		),
 		domain.NewCustomer(
 			"CUST002",
 			"Maria Souza",
 			"maria@email.com",
+			"hash2",
 		),
 	}
 

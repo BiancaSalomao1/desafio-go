@@ -34,12 +34,12 @@ func TestLoginUseCase_Execute(t *testing.T) {
 			t.Fatalf("failed to hash password: %v", err)
 		}
 
-		return &domain.User{
-			ID:           "1",
-			Name:         "Administrador",
-			Email:        "admin@email.com",
-			PasswordHash: hash,
-		}
+		return domain.NewUser(
+			"1",
+			"Administrador",
+			"admin@email.com",
+			hash,
+		)
 	}
 
 	t.Run("should login successfully", func(t *testing.T) {
@@ -108,15 +108,15 @@ func TestLoginUseCase_Execute(t *testing.T) {
 
 		_, err := useCase.Execute(
 			"admin@email.com",
-			"senha-incorreta",
+			"wrong-password",
 		)
 
-		if err == nil {
-			t.Fatal("expected invalid credentials")
-		}
-
-		if err.Error() != "invalid credentials" {
-			t.Fatalf("expected invalid credentials, got %v", err)
+		if !errors.Is(err, domain.ErrInvalidCredentials) {
+			t.Fatalf(
+				"expected %v, got %v",
+				domain.ErrInvalidCredentials,
+				err,
+			)
 		}
 	})
 

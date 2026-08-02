@@ -66,3 +66,9 @@ func (r *customerRepositoryMock) Verify() error {
 
 	return nil
 }
+func (r *customerRepositoryMock) FindByEmail(
+	email string,
+) (*domain.Customer, error) {
+
+	return r.customer, nil
+}

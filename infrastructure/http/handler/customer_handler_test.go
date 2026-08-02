@@ -96,6 +96,7 @@ func validCustomer() *domain.Customer {
 		"UI001",
 		"John Doe",
 		"john.doe@example.com",
+		"hash",
 	)
 }
 
