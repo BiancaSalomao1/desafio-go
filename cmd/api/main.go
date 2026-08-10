@@ -34,8 +34,10 @@ internal/app/application.go.
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
+
+	"desafio-go/infrastructure/logging"
 
 	_ "desafio-go/docs"
 
@@ -46,25 +48,29 @@ import (
 
 func main() {
 
+	logger := logging.New()
+
+	slog.SetDefault(logger)
+
 	// Carrega as configurações da aplicação
 	cfg := config.Load()
 
 	// Executa as migrations
 	if err := database.RunMigrations(cfg.DatabaseURL); err != nil {
-		log.Fatal(err)
+		slog.Error("failed to run migrations", "error", err)
 	}
 
 	// Abre conexão com o banco
 	db, err := database.New(cfg)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("failed to connect to database", "error", err)
 	}
 	defer db.Close()
 
 	// Monta toda a aplicação
 	httpHandler, err := app.NewApplication(cfg, db)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("failed to create application", "error", err)
 	}
 
 	// Configura servidor HTTP
@@ -73,10 +79,13 @@ func main() {
 		Handler: httpHandler,
 	}
 
-	log.Printf("Servidor iniciado na porta %s", cfg.AppPort)
-
+	slog.Info(
+		"server started",
+		"port", cfg.AppPort,
+		"environment", cfg.AppEnv,
+	)
 	// Inicia servidor
 	if err := server.ListenAndServe(); err != nil {
-		log.Fatal(err)
+		slog.Error("failed to start server", "error", err)
 	}
 }

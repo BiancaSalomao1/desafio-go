@@ -13,7 +13,7 @@ Métodos:
 */
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -30,6 +30,15 @@ func (rw *responseWriter) WriteHeader(statusCode int) {
 	rw.ResponseWriter.WriteHeader(statusCode)
 }
 
+func (rw *responseWriter) Write(body []byte) (int, error) {
+
+	if rw.statusCode == 0 {
+		rw.statusCode = http.StatusOK
+	}
+
+	return rw.ResponseWriter.Write(body)
+}
+
 func Logger(next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(
@@ -37,21 +46,29 @@ func Logger(next http.Handler) http.Handler {
 		r *http.Request,
 	) {
 
+		start := time.Now()
+
 		rw := &responseWriter{
 			ResponseWriter: w,
 			statusCode:     http.StatusOK,
 		}
 
-		start := time.Now()
+		slog.Info(
+			"request started",
+			"method", r.Method,
+			"path", r.URL.Path,
+		)
 
 		next.ServeHTTP(rw, r)
 
-		log.Printf(
-			"%s %s %d %s",
-			r.Method,
-			r.URL.Path,
-			rw.statusCode,
-			time.Since(start),
+		duration := time.Since(start)
+
+		slog.Info(
+			"request completed",
+			"method", r.Method,
+			"path", r.URL.Path,
+			"status", rw.statusCode,
+			"duration", duration.String(),
 		)
 	})
 }
