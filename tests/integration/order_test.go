@@ -1718,8 +1718,9 @@ func TestCreateOrderDuplicatedProduct(t *testing.T) {
 		ts,
 		token,
 		customerdto.CreateCustomerRequest{
-			Name:  "Cliente",
-			Email: "cliente@email.com",
+			Name:     "Cliente",
+			Email:    "cliente@email.com",
+			Password: "123456",
 		},
 	)
 
@@ -1790,8 +1791,9 @@ func TestCreateOrderConcurrentStock(t *testing.T) {
 		ts,
 		token,
 		customerdto.CreateCustomerRequest{
-			Name:  "Cliente Teste",
-			Email: "cliente@teste.com",
+			Name:     "Cliente Teste",
+			Email:    "cliente@teste.com",
+			Password: "123456",
 		},
 	)
 

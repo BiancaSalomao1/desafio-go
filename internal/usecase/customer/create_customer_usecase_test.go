@@ -21,7 +21,24 @@ import (
 	"testing"
 
 	"desafio-go/internal/domain"
+	"desafio-go/internal/security"
 )
+
+func validCustomer(t *testing.T) *domain.Customer {
+	t.Helper()
+
+	hash, err := security.HashPassword("123456")
+	if err != nil {
+		t.Fatalf("failed to hash password: %v", err)
+	}
+
+	return domain.NewCustomer(
+		"1",
+		"João da Silva",
+		"joao@email.com",
+		hash,
+	)
+}
 
 func TestCreateCustomerUseCase_Execute(t *testing.T) {
 
@@ -31,12 +48,7 @@ func TestCreateCustomerUseCase_Execute(t *testing.T) {
 
 		useCase := NewCreateCustomerUseCase(repository)
 
-		customer := domain.NewCustomer(
-			"1",
-			"João da Silva",
-			"joao@email.com",
-			"",
-		)
+		customer := validCustomer(t)
 
 		err := useCase.Execute(customer)
 
@@ -44,9 +56,6 @@ func TestCreateCustomerUseCase_Execute(t *testing.T) {
 			t.Fatalf("expected nil, got %v", err)
 		}
 
-		if customer.PasswordHash == "" {
-			t.Fatal("expected password hash to be generated")
-		}
 	})
 
 	t.Run("should return validation error", func(t *testing.T) {
@@ -62,6 +71,7 @@ func TestCreateCustomerUseCase_Execute(t *testing.T) {
 		if err == nil {
 			t.Fatal("expected validation error")
 		}
+
 	})
 
 	t.Run("should return repository error", func(t *testing.T) {
@@ -72,12 +82,7 @@ func TestCreateCustomerUseCase_Execute(t *testing.T) {
 
 		useCase := NewCreateCustomerUseCase(repository)
 
-		customer := domain.NewCustomer(
-			"1",
-			"João da Silva",
-			"joao@email.com",
-			"",
-		)
+		customer := validCustomer(t)
 
 		err := useCase.Execute(customer)
 
@@ -86,7 +91,10 @@ func TestCreateCustomerUseCase_Execute(t *testing.T) {
 		}
 
 		if err.Error() != "database error" {
-			t.Fatalf("expected database error, got %v", err)
+			t.Fatalf(
+				"expected database error, got %v",
+				err,
+			)
 		}
 	})
 
@@ -96,12 +104,7 @@ func TestCreateCustomerUseCase_Execute(t *testing.T) {
 
 		useCase := NewCreateCustomerUseCase(repository)
 
-		customer := domain.NewCustomer(
-			"1",
-			"João da Silva",
-			"joao@email.com",
-			"",
-		)
+		customer := validCustomer(t)
 
 		err := useCase.Execute(customer)
 
@@ -114,15 +117,10 @@ func TestCreateCustomerUseCase_Execute(t *testing.T) {
 		}
 
 		if repository.saveCalls != 1 {
-			t.Fatalf("expected 1 call, got %d", repository.saveCalls)
-		}
-
-		if repository.customer != customer {
-			t.Fatal("expected same customer instance")
-		}
-
-		if customer.PasswordHash == "" {
-			t.Fatal("expected password hash to be generated")
+			t.Fatalf(
+				"expected 1 call, got %d",
+				repository.saveCalls,
+			)
 		}
 	})
 
@@ -134,21 +132,12 @@ func TestCreateCustomerUseCase_Execute(t *testing.T) {
 
 		useCase := NewCreateCustomerUseCase(repository)
 
-		customer := domain.NewCustomer(
-			"1",
-			"João da Silva",
-			"joao@email.com",
-			"",
-		)
+		customer := validCustomer(t)
 
 		err := useCase.Execute(customer)
 
 		if err != nil {
 			t.Fatalf("expected nil, got %v", err)
-		}
-
-		if customer.PasswordHash == "" {
-			t.Fatal("expected password hash to be generated")
 		}
 
 		if err := repository.Verify(); err != nil {

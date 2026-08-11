@@ -67,15 +67,26 @@ func main() {
 	// Abre conexão com o banco
 	db, err := database.New(cfg)
 	if err != nil {
-		slog.Error("failed to connect to database", "error", err)
+		slog.Error(
+			"failed to connect to database",
+			"error", err,
+		)
+		return
 	}
 	defer db.Close()
 
 	// Monta toda a aplicação
 	httpHandler, err := app.NewApplication(cfg, db)
 	if err != nil {
-		slog.Error("failed to create application", "error", err)
+		slog.Error(
+			"failed to create application",
+			"error", err,
+		)
+		return
 	}
+
+	pprofServer := app.StartPprofServer(":6060")
+	defer pprofServer.Close()
 
 	// Configura servidor HTTP
 	server := &http.Server{

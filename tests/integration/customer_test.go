@@ -52,6 +52,10 @@ func createCustomer(
 
 	t.Helper()
 
+	if request.Password == "" {
+		request.Password = "123456"
+	}
+
 	body := mustMarshal(t, request)
 
 	req, err := authenticatedRequest(
@@ -84,8 +88,9 @@ func TestCreateCustomer(t *testing.T) {
 	token := createAuthenticatedUser(t, ts)
 
 	request := customerdto.CreateCustomerRequest{
-		Name:  "João Silva",
-		Email: "joao@email.com",
+		Name:     "João Silva",
+		Email:    "joao@email.com",
+		Password: "123456",
 	}
 
 	response := createCustomer(
