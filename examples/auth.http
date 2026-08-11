@@ -1,17 +1,24 @@
-### ======================================================
-### Login - Teste com REST Client
-### ======================================================
+@host=http://localhost:8080
 
-POST http://localhost:8080/login
+### Criar usuário
+
+POST {{host}}/users
 Content-Type: application/json
 
 {
-    "email":"admin@email.com",
-    "password":"123456"
+  "name": "Admin",
+  "email": "admin@email.com",
+  "password": "123456"
 }
 
 ###
 
-@host=http://localhost:8080
+### Login
 
+POST {{host}}/login
+Content-Type: application/json
 
+{
+  "email": "admin@email.com",
+  "password": "123456"
+}
