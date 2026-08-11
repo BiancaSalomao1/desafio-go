@@ -4,11 +4,18 @@ package middleware
 Função Logger
 
 Responsabilidades:
-- registrar requisições HTTP;
+
+- registrar início da requisição HTTP;
+- registrar conclusão da requisição;
+- registrar serviço;
+- registrar operação;
+- registrar resultado;
 - registrar status HTTP;
-- registrar tempo de execução.
+- registrar tempo de execução;
+- registrar erro quando houver.
 
 Métodos:
+
 - Logger()
 */
 
@@ -17,6 +24,8 @@ import (
 	"net/http"
 	"time"
 )
+
+const serviceName = "orders-api"
 
 type responseWriter struct {
 	http.ResponseWriter
@@ -53,22 +62,42 @@ func Logger(next http.Handler) http.Handler {
 			statusCode:     http.StatusOK,
 		}
 
+		operation := r.Method + " " + r.URL.Path
+
 		slog.Info(
 			"request started",
-			"method", r.Method,
-			"path", r.URL.Path,
+			"service", serviceName,
+			"operation", operation,
 		)
 
 		next.ServeHTTP(rw, r)
 
 		duration := time.Since(start)
 
-		slog.Info(
-			"request completed",
-			"method", r.Method,
-			"path", r.URL.Path,
+		result := "success"
+
+		if rw.statusCode >= http.StatusBadRequest {
+			result = "error"
+		}
+
+		attrs := []any{
+			"service", serviceName,
+			"operation", operation,
+			"result", result,
 			"status", rw.statusCode,
 			"duration", duration.String(),
+		}
+
+		if rw.statusCode >= http.StatusInternalServerError {
+			attrs = append(
+				attrs,
+				"error", http.StatusText(rw.statusCode),
+			)
+		}
+
+		slog.Info(
+			"request completed",
+			attrs...,
 		)
 	})
 }

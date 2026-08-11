@@ -57,7 +57,11 @@ func main() {
 
 	// Executa as migrations
 	if err := database.RunMigrations(cfg.DatabaseURL); err != nil {
-		slog.Error("failed to run migrations", "error", err)
+		slog.Error(
+			"failed to run migrations",
+			"error", err,
+		)
+		return
 	}
 
 	// Abre conexão com o banco
