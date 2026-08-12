@@ -122,3 +122,24 @@ sqlc-gen/
 # ============================
 
 .cache/
+
+# Testes - artefatos gerados
+/tests/cover.out
+/tests/coverage.out
+/tests/coverage.html
+/tests/*.prof
+/tests/ion
+
+# Profiling gerado na raiz
+/*.prof
+/heap.prof
+/goroutine.txt
+
+# Coverage gerado na raiz
+/cover.out
+/coverage.out
+/coverage.html
+
+# Go binaries
+*.exe
+*.out**/api

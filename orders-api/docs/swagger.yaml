@@ -1,0 +1,444 @@
+basePath: /
+definitions:
+  customer.CreateCustomerRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    type: object
+  customer.CustomerResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  customer.UpdateCustomerRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    type: object
+  httpx.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  order.OrderItemResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      productId:
+        type: string
+      quantity:
+        type: integer
+      subtotal:
+        type: number
+    type: object
+  order.OrderResponse:
+    properties:
+      customerId:
+        type: string
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/order.OrderItemResponse'
+        type: array
+      status:
+        type: string
+      total:
+        type: number
+    type: object
+  product.CreateProductRequest:
+    properties:
+      name:
+        type: string
+      price:
+        type: number
+      stock:
+        type: integer
+    type: object
+  product.ProductResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      stock:
+        type: integer
+    type: object
+  user.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  user.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    type: object
+  user.UserResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    name: Bianca Salomão
+    url: https://github.com/BiancaSalomao1
+  description: API REST desenvolvida em Go utilizando Clean Architecture.
+  license:
+    name: MIT
+  termsOfService: http://swagger.io/terms/
+  title: Desafio Go API
+  version: "1.0"
+paths:
+  /customers:
+    post:
+      consumes:
+      - application/json
+      description: Cadastra um novo cliente.
+      parameters:
+      - description: Cliente
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/customer.CreateCustomerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/customer.CustomerResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      summary: Criar Cliente
+      tags:
+      - Customers
+  /customers/{id}:
+    delete:
+      description: Remove um cliente.
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover Cliente
+      tags:
+      - Customers
+    put:
+      consumes:
+      - application/json
+      description: Atualiza um cliente.
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Cliente
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/customer.UpdateCustomerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customer.CustomerResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar Cliente
+      tags:
+      - Customers
+  /orders:
+    get:
+      description: Retorna todos os pedidos.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/order.OrderResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar Pedidos
+      tags:
+      - Orders
+  /orders/{id}:
+    get:
+      description: Busca um pedido pelo ID.
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/order.OrderResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Buscar Pedido
+      tags:
+      - Orders
+  /orders/{id}/cancel:
+    patch:
+      description: Cancela um pedido e devolve o estoque.
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancelar Pedido
+      tags:
+      - Orders
+  /orders/{id}/pay:
+    patch:
+      description: Altera o status do pedido para PAID.
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Pagar Pedido
+      tags:
+      - Orders
+  /products:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Produto
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/product.CreateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/product.ProductResponse'
+      security:
+      - BearerAuth: []
+      summary: Criar Produto
+      tags:
+      - Products
+  /users:
+    get:
+      description: Retorna todos os usuários.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/user.UserResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar Usuários
+      tags:
+      - Users
+    post:
+      consumes:
+      - application/json
+      description: Cadastra um novo usuário.
+      parameters:
+      - description: Usuário
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/user.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      summary: Criar Usuário
+      tags:
+      - Users
+  /users/{id}:
+    delete:
+      description: Remove um usuário.
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover Usuário
+      tags:
+      - Users
+    get:
+      description: Busca um usuário pelo ID.
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.UserResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Buscar Usuário
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Atualiza um usuário.
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Usuário
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar Usuário
+      tags:
+      - Users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
