@@ -19,7 +19,7 @@ Métodos:
 */
 
 import (
-	"desafio-go/orders-api/internal/security"
+	"orders-api/internal/security"
 )
 
 type Customer struct {

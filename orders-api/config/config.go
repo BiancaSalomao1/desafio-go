@@ -24,6 +24,8 @@ type Config struct {
 	DatabaseURL  string
 	JWTSecret    string
 	JWTExpiresIn string
+	KafkaBrokers string
+	KafkaTopic   string
 }
 
 func Load() *Config {
@@ -40,5 +42,7 @@ func Load() *Config {
 		DatabaseURL:  os.Getenv("DATABASE_URL"),
 		JWTSecret:    os.Getenv("JWT_SECRET"),
 		JWTExpiresIn: os.Getenv("JWT_EXPIRES_IN"),
+		KafkaBrokers: os.Getenv("KAFKA_BROKERS"),
+		KafkaTopic:   os.Getenv("KAFKA_TOPIC"),
 	}
 }

@@ -21,9 +21,9 @@ Métodos:
 import (
 	"log/slog"
 
-	"desafio-go/orders-api/internal/domain"
-	"desafio-go/orders-api/internal/repository"
-	"desafio-go/orders-api/internal/security"
+	"orders-api/internal/domain"
+	"orders-api/internal/repository"
+	"orders-api/internal/security"
 )
 
 const customerServiceName = "orders-api"

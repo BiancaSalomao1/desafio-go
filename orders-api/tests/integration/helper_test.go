@@ -38,9 +38,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"desafio-go/orders-api/config"
-	"desafio-go/orders-api/infrastructure/database"
-	app "desafio-go/orders-api/internal/app"
+	"orders-api/config"
+	"orders-api/infrastructure/database"
+	app "orders-api/internal/app"
 )
 
 type TestServer struct {

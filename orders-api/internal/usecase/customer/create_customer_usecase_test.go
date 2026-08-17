@@ -20,8 +20,8 @@ import (
 	"errors"
 	"testing"
 
-	"desafio-go/orders-api/internal/domain"
-	"desafio-go/orders-api/internal/security"
+	"orders-api/internal/domain"
+	"orders-api/internal/security"
 )
 
 func validCustomer(t *testing.T) *domain.Customer {

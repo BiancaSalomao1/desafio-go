@@ -29,11 +29,11 @@ import (
 	"errors"
 	"net/http"
 
-	"desafio-go/orders-api/infrastructure/http/httpx"
-	"desafio-go/orders-api/internal/domain"
+	"orders-api/infrastructure/http/httpx"
+	"orders-api/internal/domain"
 
-	orderdto "desafio-go/orders-api/internal/dto/order"
-	"desafio-go/orders-api/internal/mapper"
+	orderdto "orders-api/internal/dto/order"
+	"orders-api/internal/mapper"
 
 	"strconv"
 )

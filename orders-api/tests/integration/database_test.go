@@ -19,8 +19,8 @@ import (
 	"context"
 	"testing"
 
-	"desafio-go/orders-api/config"
-	"desafio-go/orders-api/infrastructure/database"
+	"orders-api/config"
+	"orders-api/infrastructure/database"
 
 	"github.com/jackc/pgx/v5"
 )

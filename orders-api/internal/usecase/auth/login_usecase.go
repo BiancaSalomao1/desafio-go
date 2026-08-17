@@ -14,10 +14,10 @@ Métodos:
 import (
 	"time"
 
-	"desafio-go/orders-api/internal/domain"
-	"desafio-go/orders-api/internal/security"
+	"orders-api/internal/domain"
+	"orders-api/internal/security"
 
-	"desafio-go/orders-api/internal/repository"
+	"orders-api/internal/repository"
 )
 
 type LoginUseCase struct {

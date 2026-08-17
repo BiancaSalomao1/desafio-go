@@ -27,10 +27,10 @@ Métodos:
 import (
 	"net/http"
 
-	"desafio-go/orders-api/infrastructure/http/httpx"
+	"orders-api/infrastructure/http/httpx"
 
-	customerdto "desafio-go/orders-api/internal/dto/customer"
-	"desafio-go/orders-api/internal/mapper"
+	customerdto "orders-api/internal/dto/customer"
+	"orders-api/internal/mapper"
 )
 
 type CustomerHandler struct {

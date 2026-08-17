@@ -22,7 +22,7 @@ import (
 	"errors"
 	"testing"
 
-	"desafio-go/orders-api/internal/domain"
+	"orders-api/internal/domain"
 )
 
 func TestCreateUserUseCase_Execute(t *testing.T) {

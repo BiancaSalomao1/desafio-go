@@ -13,7 +13,7 @@ Métodos:
 - Execute()
 */
 
-import "desafio-go/orders-api/internal/repository"
+import "orders-api/internal/repository"
 
 type PayOrderUseCase struct {
 	orderRepository repository.OrderRepository

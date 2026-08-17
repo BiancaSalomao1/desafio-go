@@ -15,23 +15,38 @@ Métodos:
 */
 
 import (
-	"desafio-go/orders-api/internal/domain"
-	"desafio-go/orders-api/internal/repository"
+	"context"
+	"time"
+
+	"github.com/google/uuid"
+
+	"orders-api/internal/domain"
+	"orders-api/internal/messaging"
+	"orders-api/internal/repository"
 )
 
 type CreateOrderUseCase struct {
 	transactionManager repository.TransactionManager
 	repositoryFactory  repository.RepositoryFactory
+	eventPublisher     messaging.EventPublisher
 }
 
 func NewCreateOrderUseCase(
 	transactionManager repository.TransactionManager,
 	repositoryFactory repository.RepositoryFactory,
+	publishers ...messaging.EventPublisher,
 ) *CreateOrderUseCase {
+
+	var eventPublisher messaging.EventPublisher
+
+	if len(publishers) > 0 {
+		eventPublisher = publishers[0]
+	}
 
 	return &CreateOrderUseCase{
 		transactionManager: transactionManager,
 		repositoryFactory:  repositoryFactory,
+		eventPublisher:     eventPublisher,
 	}
 }
 
@@ -41,7 +56,7 @@ func (uc *CreateOrderUseCase) Execute(order *domain.Order) error {
 		return err
 	}
 
-	return uc.transactionManager.WithinTransaction(func(tx repository.DBTX) error {
+	err := uc.transactionManager.WithinTransaction(func(tx repository.DBTX) error {
 
 		productRepository := uc.repositoryFactory.Product(tx)
 		customerRepository := uc.repositoryFactory.Customer(tx)
@@ -52,7 +67,6 @@ func (uc *CreateOrderUseCase) Execute(order *domain.Order) error {
 		}
 
 		products := make(map[string]*domain.Product)
-
 		seen := make(map[string]struct{})
 
 		for _, item := range order.Items {
@@ -94,4 +108,30 @@ func (uc *CreateOrderUseCase) Execute(order *domain.Order) error {
 
 		return nil
 	})
+
+	if err != nil {
+		return err
+	}
+
+	// A publicação é feita somente depois do commit da transação.
+	if uc.eventPublisher != nil {
+
+		event := messaging.Event{
+			MessageID:     uuid.NewString(),
+			EventType:     "OrderCreated",
+			CorrelationID: uuid.NewString(),
+			SagaID:        uuid.NewString(),
+			OrderID:       order.ID,
+			OccurredAt:    time.Now().UTC(),
+		}
+
+		if err := uc.eventPublisher.Publish(
+			context.Background(),
+			event,
+		); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -3,8 +3,8 @@ package mapper
 import (
 	"testing"
 
-	"desafio-go/orders-api/internal/domain"
-	userdto "desafio-go/orders-api/internal/dto/user"
+	"orders-api/internal/domain"
+	userdto "orders-api/internal/dto/user"
 )
 
 func TestToUser(t *testing.T) {

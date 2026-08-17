@@ -2,11 +2,11 @@ package handler
 
 import (
 	"bytes"
-	"desafio-go/orders-api/infrastructure/http/testutil"
-	authdto "desafio-go/orders-api/internal/dto/auth"
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"orders-api/infrastructure/http/testutil"
+	authdto "orders-api/internal/dto/auth"
 	"testing"
 )
 

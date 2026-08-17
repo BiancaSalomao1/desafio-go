@@ -36,14 +36,16 @@ package main
 import (
 	"log/slog"
 	"net/http"
+	"strings"
 
-	"desafio-go/orders-api/infrastructure/logging"
+	"orders-api/infrastructure/logging"
+	"orders-api/infrastructure/messaging/kafka"
 
-	_ "desafio-go/orders-api/docs"
+	_ "orders-api/docs"
 
-	"desafio-go/orders-api/config"
-	"desafio-go/orders-api/infrastructure/database"
-	app "desafio-go/orders-api/internal/app"
+	"orders-api/config"
+	"orders-api/infrastructure/database"
+	app "orders-api/internal/app"
 )
 
 func main() {
@@ -54,6 +56,23 @@ func main() {
 
 	// Carrega as configurações da aplicação
 	cfg := config.Load()
+
+	kafkaBrokers := strings.Split(cfg.KafkaBrokers, ",")
+
+	kafkaProducer, err := kafka.NewProducer(
+		kafkaBrokers,
+		cfg.KafkaTopic,
+		logger,
+	)
+	if err != nil {
+		slog.Error(
+			"failed to create kafka producer",
+			"error", err,
+		)
+		return
+	}
+
+	defer kafkaProducer.Close()
 
 	// Executa as migrations
 	if err := database.RunMigrations(cfg.DatabaseURL); err != nil {
@@ -76,7 +95,7 @@ func main() {
 	defer db.Close()
 
 	// Monta toda a aplicação
-	httpHandler, err := app.NewApplication(cfg, db)
+	httpHandler, err := app.NewApplication(cfg, db, kafkaProducer)
 	if err != nil {
 		slog.Error(
 			"failed to create application",

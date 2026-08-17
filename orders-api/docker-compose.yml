@@ -1,0 +1,52 @@
+services:
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: pedidos_postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    container_name: pedidos_api
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      APP_PORT: "8080"
+      DATABASE_URL: postgres://app:app@postgres:5432/app?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      RABBITMQ_URL: amqp://app:app@rabbitmq:5672/
+
+    networks:
+      - default
+      - saga-network
+
+volumes:
+  postgres_data:
+
+networks:
+  saga-network:
+    external: true

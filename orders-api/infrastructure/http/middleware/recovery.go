@@ -16,7 +16,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"desafio-go/orders-api/infrastructure/http/httpx"
+	"orders-api/infrastructure/http/httpx"
 )
 
 func Recovery(next http.Handler) http.Handler {

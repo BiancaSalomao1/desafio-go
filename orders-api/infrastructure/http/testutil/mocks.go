@@ -1,7 +1,7 @@
 package testutil
 
 import (
-	"desafio-go/orders-api/internal/domain"
+	"orders-api/internal/domain"
 )
 
 /******************************

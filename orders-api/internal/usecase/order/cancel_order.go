@@ -19,7 +19,7 @@ Métodos:
 */
 
 import (
-	"desafio-go/orders-api/internal/repository"
+	"orders-api/internal/repository"
 )
 
 type CancelOrderUseCase struct {

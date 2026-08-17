@@ -1,8 +1,8 @@
 package mapper
 
 import (
-	"desafio-go/orders-api/internal/domain"
-	productdto "desafio-go/orders-api/internal/dto/product"
+	"orders-api/internal/domain"
+	productdto "orders-api/internal/dto/product"
 	"testing"
 )
 

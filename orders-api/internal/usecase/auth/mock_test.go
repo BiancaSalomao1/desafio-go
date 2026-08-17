@@ -12,7 +12,7 @@ Responsabilidades:
 import (
 	"errors"
 
-	"desafio-go/orders-api/internal/domain"
+	"orders-api/internal/domain"
 )
 
 type userRepositoryMock struct {

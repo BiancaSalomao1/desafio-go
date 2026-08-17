@@ -13,9 +13,9 @@ Métodos:
 import (
 	"net/http"
 
-	"desafio-go/orders-api/infrastructure/http/httpx"
+	"orders-api/infrastructure/http/httpx"
 
-	"desafio-go/orders-api/internal/dto/auth"
+	"orders-api/internal/dto/auth"
 )
 
 type AuthHandler struct {

@@ -15,10 +15,10 @@ Métodos:
 import (
 	"net/http"
 
-	_ "desafio-go/orders-api/docs"
+	_ "orders-api/docs"
 
-	"desafio-go/orders-api/infrastructure/http/handler"
-	"desafio-go/orders-api/infrastructure/http/middleware"
+	"orders-api/infrastructure/http/handler"
+	"orders-api/infrastructure/http/middleware"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )

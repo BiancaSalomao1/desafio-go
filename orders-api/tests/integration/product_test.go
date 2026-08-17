@@ -41,7 +41,7 @@ import (
 	"net/http"
 	"testing"
 
-	productdto "desafio-go/orders-api/internal/dto/product"
+	productdto "orders-api/internal/dto/product"
 )
 
 func createProduct(

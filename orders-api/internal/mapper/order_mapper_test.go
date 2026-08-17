@@ -3,8 +3,8 @@ package mapper
 import (
 	"testing"
 
-	domain "desafio-go/orders-api/internal/domain"
-	orderdto "desafio-go/orders-api/internal/dto/order"
+	domain "orders-api/internal/domain"
+	orderdto "orders-api/internal/dto/order"
 )
 
 func TestToOrder(t *testing.T) {

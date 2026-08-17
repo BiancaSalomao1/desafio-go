@@ -17,7 +17,7 @@ Métodos:
 import (
 	"context"
 
-	"desafio-go/orders-api/internal/repository"
+	"orders-api/internal/repository"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )

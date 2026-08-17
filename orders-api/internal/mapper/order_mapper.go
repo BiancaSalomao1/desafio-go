@@ -1,8 +1,8 @@
 package mapper
 
 import (
-	"desafio-go/orders-api/internal/domain"
-	orderdto "desafio-go/orders-api/internal/dto/order"
+	"orders-api/internal/domain"
+	orderdto "orders-api/internal/dto/order"
 
 	"github.com/google/uuid"
 )

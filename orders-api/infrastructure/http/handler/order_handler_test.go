@@ -2,12 +2,12 @@ package handler
 
 import (
 	"bytes"
-	"desafio-go/orders-api/infrastructure/http/testutil"
-	"desafio-go/orders-api/internal/domain"
-	orderdto "desafio-go/orders-api/internal/dto/order"
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"orders-api/infrastructure/http/testutil"
+	"orders-api/internal/domain"
+	orderdto "orders-api/internal/dto/order"
 	"testing"
 )
 

@@ -1,13 +1,14 @@
 services:
+
   postgres:
     image: postgres:17-alpine
     container_name: product_postgres
     restart: unless-stopped
 
     environment:
-      POSTGRES_USER: product
-      POSTGRES_PASSWORD: product
       POSTGRES_DB: products
+      POSTGRES_PASSWORD: product
+      POSTGRES_USER: product
 
     ports:
       - "5434:5432"
@@ -21,5 +22,29 @@ services:
       timeout: 5s
       retries: 10
 
+  api:
+    build: .
+    container_name: product_api
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    ports:
+      - "8081:8081"
+
+    environment:
+      APP_PORT: "8081"
+      DATABASE_URL: postgres://product:product@postgres:5432/products?sslmode=disable
+      RABBITMQ_URL: amqp://app:app@rabbitmq:5672/
+
+    networks:
+      - default
+      - saga-network
+
 volumes:
   product_postgres_data:
+
+networks:
+  saga-network:
+    external: true

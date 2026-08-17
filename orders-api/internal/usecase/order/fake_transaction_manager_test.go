@@ -1,6 +1,6 @@
 package order
 
-import "desafio-go/orders-api/internal/repository"
+import "orders-api/internal/repository"
 
 type FakeTransactionManager struct{}
 

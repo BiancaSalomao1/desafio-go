@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"desafio-go/orders-api/internal/domain"
-	"desafio-go/orders-api/internal/security"
+	"orders-api/internal/domain"
+	"orders-api/internal/security"
 )
 
 func BenchmarkLoginUseCase_Execute(b *testing.B) {

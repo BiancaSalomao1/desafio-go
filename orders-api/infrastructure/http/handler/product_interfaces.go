@@ -1,6 +1,6 @@
 package handler
 
-import "desafio-go/orders-api/internal/domain"
+import "orders-api/internal/domain"
 
 type CreateProductUseCase interface {
 	Execute(product *domain.Product) error

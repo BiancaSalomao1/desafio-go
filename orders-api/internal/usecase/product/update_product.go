@@ -15,8 +15,8 @@ Métodos:
 */
 
 import (
-	"desafio-go/orders-api/internal/domain"
-	"desafio-go/orders-api/internal/repository"
+	"orders-api/internal/domain"
+	"orders-api/internal/repository"
 )
 
 type UpdateProductUseCase struct {

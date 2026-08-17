@@ -50,9 +50,9 @@ import (
 	"sync"
 	"testing"
 
-	customerdto "desafio-go/orders-api/internal/dto/customer"
-	orderdto "desafio-go/orders-api/internal/dto/order"
-	productdto "desafio-go/orders-api/internal/dto/product"
+	customerdto "orders-api/internal/dto/customer"
+	orderdto "orders-api/internal/dto/order"
+	productdto "orders-api/internal/dto/product"
 )
 
 func createOrder(

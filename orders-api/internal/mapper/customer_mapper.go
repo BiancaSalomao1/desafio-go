@@ -16,8 +16,8 @@ Métodos:
 */
 
 import (
-	"desafio-go/orders-api/internal/domain"
-	customerdto "desafio-go/orders-api/internal/dto/customer"
+	"orders-api/internal/domain"
+	customerdto "orders-api/internal/dto/customer"
 
 	"github.com/google/uuid"
 )

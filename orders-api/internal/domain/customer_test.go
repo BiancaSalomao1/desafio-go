@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"desafio-go/orders-api/internal/security"
+	"orders-api/internal/security"
 )
 
 func TestNewCustomer(t *testing.T) {

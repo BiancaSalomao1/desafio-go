@@ -21,8 +21,8 @@ import (
 	"net/http"
 	"testing"
 
-	authdto "desafio-go/orders-api/internal/dto/auth"
-	userdto "desafio-go/orders-api/internal/dto/user"
+	authdto "orders-api/internal/dto/auth"
+	userdto "orders-api/internal/dto/user"
 )
 
 func createAuthenticatedUser(

@@ -1,6 +1,6 @@
 package repository
 
-import "desafio-go/orders-api/internal/domain"
+import "orders-api/internal/domain"
 
 /*
 interface OrderRepository

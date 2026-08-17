@@ -10,7 +10,7 @@ Responsabilidades:
 import (
 	"testing"
 
-	"desafio-go/orders-api/internal/domain"
+	"orders-api/internal/domain"
 )
 
 func BenchmarkCreateCustomerUseCase_Execute(b *testing.B) {

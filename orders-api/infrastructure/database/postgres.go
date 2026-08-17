@@ -14,7 +14,7 @@ import (
 	"context"
 	"time"
 
-	"desafio-go/orders-api/config"
+	"orders-api/config"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )

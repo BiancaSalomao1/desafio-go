@@ -40,7 +40,7 @@ import (
 	"net/http"
 	"testing"
 
-	customerdto "desafio-go/orders-api/internal/dto/customer"
+	customerdto "orders-api/internal/dto/customer"
 )
 
 func createCustomer(

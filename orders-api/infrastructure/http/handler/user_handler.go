@@ -28,10 +28,10 @@ Métodos:
 import (
 	"net/http"
 
-	"desafio-go/orders-api/infrastructure/http/httpx"
+	"orders-api/infrastructure/http/httpx"
 
-	userdto "desafio-go/orders-api/internal/dto/user"
-	"desafio-go/orders-api/internal/mapper"
+	userdto "orders-api/internal/dto/user"
+	"orders-api/internal/mapper"
 )
 
 type UserHandler struct {

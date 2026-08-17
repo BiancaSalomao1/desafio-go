@@ -17,7 +17,7 @@ import (
 	"net/http"
 	"strings"
 
-	"desafio-go/orders-api/internal/security"
+	"orders-api/internal/security"
 )
 
 type contextKey string

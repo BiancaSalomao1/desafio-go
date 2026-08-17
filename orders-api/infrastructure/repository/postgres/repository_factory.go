@@ -1,6 +1,6 @@
 package postgres
 
-import "desafio-go/orders-api/internal/repository"
+import "orders-api/internal/repository"
 
 type RepositoryFactory struct{}
 

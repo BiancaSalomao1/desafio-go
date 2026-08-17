@@ -39,18 +39,20 @@ import (
 	"net/http"
 	"time"
 
-	"desafio-go/orders-api/config"
-	"desafio-go/orders-api/infrastructure/database"
-	"desafio-go/orders-api/infrastructure/http/handler"
-	"desafio-go/orders-api/infrastructure/http/middleware"
-	"desafio-go/orders-api/infrastructure/http/routes"
-	"desafio-go/orders-api/infrastructure/repository/postgres"
+	"orders-api/config"
+	"orders-api/infrastructure/database"
+	"orders-api/infrastructure/http/handler"
+	"orders-api/infrastructure/http/middleware"
+	"orders-api/infrastructure/http/routes"
+	"orders-api/infrastructure/repository/postgres"
 
-	authusecase "desafio-go/orders-api/internal/usecase/auth"
-	customerusecase "desafio-go/orders-api/internal/usecase/customer"
-	orderusecase "desafio-go/orders-api/internal/usecase/order"
-	productusecase "desafio-go/orders-api/internal/usecase/product"
-	userusecase "desafio-go/orders-api/internal/usecase/user"
+	authusecase "orders-api/internal/usecase/auth"
+	customerusecase "orders-api/internal/usecase/customer"
+	orderusecase "orders-api/internal/usecase/order"
+	productusecase "orders-api/internal/usecase/product"
+	userusecase "orders-api/internal/usecase/user"
+
+	"orders-api/internal/messaging"
 )
 
 // NewApplication monta toda a aplicação e retorna o handler HTTP
@@ -58,6 +60,7 @@ import (
 func NewApplication(
 	cfg *config.Config,
 	db *database.Database,
+	publishers ...messaging.EventPublisher,
 ) (http.Handler, error) {
 
 	// Transaction Manager
@@ -109,6 +112,7 @@ func NewApplication(
 	createOrder := orderusecase.NewCreateOrderUseCase(
 		transactionManager,
 		repositoryFactory,
+		publishers...,
 	)
 
 	getOrder := orderusecase.NewGetOrderUseCase(orderRepository)

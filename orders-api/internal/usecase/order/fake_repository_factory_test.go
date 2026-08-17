@@ -1,7 +1,7 @@
 package order
 
 import (
-	"desafio-go/orders-api/internal/repository"
+	"orders-api/internal/repository"
 )
 
 type FakeRepositoryFactory struct {

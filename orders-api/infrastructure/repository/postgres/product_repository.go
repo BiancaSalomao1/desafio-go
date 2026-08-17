@@ -22,9 +22,9 @@ package postgres
 import (
 	"context"
 
-	"desafio-go/orders-api/internal/repository"
+	"orders-api/internal/repository"
 
-	"desafio-go/orders-api/internal/domain"
+	"orders-api/internal/domain"
 
 	"errors"
 

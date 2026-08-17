@@ -36,9 +36,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"desafio-go/orders-api/infrastructure/http/testutil"
-	"desafio-go/orders-api/internal/domain"
-	productdto "desafio-go/orders-api/internal/dto/product"
+	"orders-api/infrastructure/http/testutil"
+	"orders-api/internal/domain"
+	productdto "orders-api/internal/dto/product"
 )
 
 // mocks
