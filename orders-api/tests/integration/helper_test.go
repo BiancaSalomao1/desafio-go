@@ -38,6 +38,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/joho/godotenv"
+
 	"orders-api/config"
 	"orders-api/infrastructure/database"
 	app "orders-api/internal/app"
@@ -52,7 +54,10 @@ type TestServer struct {
 func setup(t *testing.T) *TestServer {
 	t.Helper()
 
-	// Carrega configurações
+	if err := godotenv.Load("../../.env"); err != nil {
+		t.Fatalf("error loading .env: %v", err)
+	}
+
 	cfg := config.Load()
 
 	// Executa as migrations
@@ -70,7 +75,7 @@ func setup(t *testing.T) *TestServer {
 	cleanDatabase(t, db)
 
 	// Monta a aplicação
-	httpHandler, err := app.NewApplication(cfg, db)
+	httpHandler, _, err := app.NewApplication(cfg, db)
 	if err != nil {
 		db.Close()
 		t.Fatalf("error creating application: %v", err)

@@ -3,78 +3,76 @@ Função main
 
 Responsabilidades:
 - carregar configurações;
+- conectar ao RabbitMQ;
+- criar publisher e consumer;
 - executar migrations;
 - abrir conexão com PostgreSQL;
 - montar a aplicação;
 - iniciar o servidor HTTP.
-
-A montagem da aplicação (repositórios, casos de uso,
-handlers, rotas e middlewares) é realizada em
-internal/app/application.go.
 */
 
-// Package main Desafio Go API
-//
-// @title           Desafio Go API
-// @version         1.0
-// @description     API REST desenvolvida em Go utilizando Clean Architecture.
-// @termsOfService  http://swagger.io/terms/
-//
-// @contact.name   Bianca Salomão
-// @contact.url    https://github.com/BiancaSalomao1
-//
-// @license.name  MIT
-//
-// @host      localhost:8080
-// @BasePath  /
-//
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
 package main
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
-	"strings"
-
-	"orders-api/infrastructure/logging"
-	"orders-api/infrastructure/messaging/kafka"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	_ "orders-api/docs"
 
 	"orders-api/config"
 	"orders-api/infrastructure/database"
+	"orders-api/infrastructure/logging"
+	"orders-api/infrastructure/messaging/rabbitmq"
 	app "orders-api/internal/app"
 )
 
 func main() {
-
 	logger := logging.New()
-
 	slog.SetDefault(logger)
 
-	// Carrega as configurações da aplicação
 	cfg := config.Load()
 
-	kafkaBrokers := strings.Split(cfg.KafkaBrokers, ",")
-
-	kafkaProducer, err := kafka.NewProducer(
-		kafkaBrokers,
-		cfg.KafkaTopic,
-		logger,
-	)
+	rabbitConnection, err := rabbitmq.NewConnection(cfg.RabbitMQURL)
 	if err != nil {
 		slog.Error(
-			"failed to create kafka producer",
+			"failed to connect to rabbitmq",
 			"error", err,
 		)
 		return
 	}
+	defer rabbitConnection.Close()
 
-	defer kafkaProducer.Close()
+	rabbitPublisher, err := rabbitmq.NewPublisher(
+		rabbitConnection,
+		logger,
+	)
+	if err != nil {
+		slog.Error(
+			"failed to create rabbitmq publisher",
+			"error", err,
+		)
+		return
+	}
+	defer rabbitPublisher.Close()
 
-	// Executa as migrations
+	rabbitConsumer, err := rabbitmq.NewConsumer(
+		rabbitConnection,
+		logger,
+	)
+	if err != nil {
+		slog.Error(
+			"failed to create rabbitmq consumer",
+			"error", err,
+		)
+		return
+	}
+	defer rabbitConsumer.Close()
+
 	if err := database.RunMigrations(cfg.DatabaseURL); err != nil {
 		slog.Error(
 			"failed to run migrations",
@@ -83,7 +81,6 @@ func main() {
 		return
 	}
 
-	// Abre conexão com o banco
 	db, err := database.New(cfg)
 	if err != nil {
 		slog.Error(
@@ -93,9 +90,12 @@ func main() {
 		return
 	}
 	defer db.Close()
+	httpHandler, orderEventHandler, err := app.NewApplication(
+		cfg,
+		db,
+		rabbitPublisher,
+	)
 
-	// Monta toda a aplicação
-	httpHandler, err := app.NewApplication(cfg, db, kafkaProducer)
 	if err != nil {
 		slog.Error(
 			"failed to create application",
@@ -104,22 +104,64 @@ func main() {
 		return
 	}
 
-	pprofServer := app.StartPprofServer(":6060")
-	defer pprofServer.Close()
-
-	// Configura servidor HTTP
 	server := &http.Server{
 		Addr:    ":" + cfg.AppPort,
 		Handler: httpHandler,
 	}
 
-	slog.Info(
-		"server started",
-		"port", cfg.AppPort,
-		"environment", cfg.AppEnv,
+	ctx, stop := signal.NotifyContext(
+		context.Background(),
+		os.Interrupt,
+		syscall.SIGTERM,
 	)
-	// Inicia servidor
-	if err := server.ListenAndServe(); err != nil {
-		slog.Error("failed to start server", "error", err)
+	defer stop()
+
+	go func() {
+		slog.Info(
+			"server started",
+			"port", cfg.AppPort,
+			"environment", cfg.AppEnv,
+		)
+
+		if err := server.ListenAndServe(); err != nil &&
+			err != http.ErrServerClosed {
+			slog.Error(
+				"failed to start server",
+				"error", err,
+			)
+		}
+	}()
+
+	go func() {
+		err := rabbitConsumer.Consume(
+			ctx,
+			orderEventHandler.Handle,
+		)
+
+		if err != nil {
+			slog.Error(
+				"rabbitmq consumer stopped",
+				"error", err,
+			)
+		}
+	}()
+
+	<-ctx.Done()
+
+	slog.Info("shutdown signal received")
+
+	shutdownCtx, cancel := context.WithTimeout(
+		context.Background(),
+		10*time.Second,
+	)
+	defer cancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		slog.Error(
+			"server shutdown failed",
+			"error", err,
+		)
 	}
+
+	slog.Info("server stopped")
 }

@@ -36,15 +36,15 @@ PostgreSQL
 package app
 
 import (
+	"log/slog"
 	"net/http"
-	"time"
-
 	"orders-api/config"
 	"orders-api/infrastructure/database"
 	"orders-api/infrastructure/http/handler"
 	"orders-api/infrastructure/http/middleware"
 	"orders-api/infrastructure/http/routes"
 	"orders-api/infrastructure/repository/postgres"
+	"time"
 
 	authusecase "orders-api/internal/usecase/auth"
 	customerusecase "orders-api/internal/usecase/customer"
@@ -52,6 +52,7 @@ import (
 	productusecase "orders-api/internal/usecase/product"
 	userusecase "orders-api/internal/usecase/user"
 
+	"orders-api/infrastructure/messaging/rabbitmq"
 	"orders-api/internal/messaging"
 )
 
@@ -61,23 +62,16 @@ func NewApplication(
 	cfg *config.Config,
 	db *database.Database,
 	publishers ...messaging.EventPublisher,
-) (http.Handler, error) {
+) (http.Handler, *rabbitmq.OrderEventHandler, error) {
 
-	// Transaction Manager
 	transactionManager := database.NewTransactionManager(db.Pool)
 
-	// Repository Factory
 	repositoryFactory := postgres.NewRepositoryFactory()
 
-	// Repositories
 	productRepository := repositoryFactory.Product(db.Pool)
 	customerRepository := repositoryFactory.Customer(db.Pool)
 	userRepository := repositoryFactory.User(db.Pool)
 	orderRepository := repositoryFactory.Order(db.Pool)
-
-	// ==========================================================
-	// Product Use Cases
-	// ==========================================================
 
 	createProduct := productusecase.NewCreateProductUseCase(productRepository)
 	getProduct := productusecase.NewGetProductUseCase(productRepository)
@@ -85,19 +79,11 @@ func NewApplication(
 	updateProduct := productusecase.NewUpdateProductUseCase(productRepository)
 	deleteProduct := productusecase.NewDeleteProductUseCase(productRepository)
 
-	// ==========================================================
-	// Customer Use Cases
-	// ==========================================================
-
 	createCustomer := customerusecase.NewCreateCustomerUseCase(customerRepository)
 	getCustomer := customerusecase.NewGetCustomerUseCase(customerRepository)
 	listCustomers := customerusecase.NewListCustomersUseCase(customerRepository)
 	updateCustomer := customerusecase.NewUpdateCustomerUseCase(customerRepository)
 	deleteCustomer := customerusecase.NewDeleteCustomerUseCase(customerRepository)
-
-	// ==========================================================
-	// User Use Cases
-	// ==========================================================
 
 	createUser := userusecase.NewCreateUserUseCase(userRepository)
 	getUser := userusecase.NewGetUserUseCase(userRepository)
@@ -105,14 +91,23 @@ func NewApplication(
 	updateUser := userusecase.NewUpdateUserUseCase(userRepository)
 	deleteUser := userusecase.NewDeleteUserUseCase(userRepository)
 
-	// ==========================================================
-	// Order Use Cases
-	// ==========================================================
-
 	createOrder := orderusecase.NewCreateOrderUseCase(
 		transactionManager,
 		repositoryFactory,
 		publishers...,
+	)
+	handleStockReserved := orderusecase.NewHandleStockReservedUseCase(
+		orderRepository,
+	)
+
+	handleStockReservationFailed := orderusecase.NewHandleStockReservationFailedUseCase(
+		orderRepository,
+	)
+
+	orderEventHandler := rabbitmq.NewOrderEventHandler(
+		handleStockReserved,
+		handleStockReservationFailed,
+		slog.Default(),
 	)
 
 	getOrder := orderusecase.NewGetOrderUseCase(orderRepository)
@@ -124,15 +119,12 @@ func NewApplication(
 	cancelOrder := orderusecase.NewCancelOrderUseCase(
 		transactionManager,
 		repositoryFactory,
+		publishers...,
 	)
-
-	// ==========================================================
-	// Authentication
-	// ==========================================================
 
 	jwtTTL, err := time.ParseDuration(cfg.JWTExpiresIn)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	loginUseCase := authusecase.NewLoginUseCase(
@@ -140,10 +132,6 @@ func NewApplication(
 		cfg.JWTSecret,
 		jwtTTL,
 	)
-
-	// ==========================================================
-	// Handlers
-	// ==========================================================
 
 	authHandler := handler.NewAuthHandler(
 		loginUseCase,
@@ -181,10 +169,6 @@ func NewApplication(
 		cancelOrder,
 	)
 
-	// ==========================================================
-	// Router
-	// ==========================================================
-
 	router := routes.NewRouter(
 		productHandler,
 		customerHandler,
@@ -194,15 +178,11 @@ func NewApplication(
 		cfg.JWTSecret,
 	)
 
-	// ==========================================================
-	// Global Middlewares
-	// ==========================================================
-
 	httpHandler := middleware.Recovery(
 		middleware.Logger(
 			middleware.CORS(router),
 		),
 	)
 
-	return httpHandler, nil
+	return httpHandler, orderEventHandler, nil
 }

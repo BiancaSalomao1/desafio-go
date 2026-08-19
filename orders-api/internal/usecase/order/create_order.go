@@ -21,7 +21,7 @@ import (
 	"github.com/google/uuid"
 
 	"orders-api/internal/domain"
-	"orders-api/internal/messaging"
+	messaging "orders-api/internal/messaging"
 	"orders-api/internal/repository"
 )
 
@@ -58,7 +58,6 @@ func (uc *CreateOrderUseCase) Execute(order *domain.Order) error {
 
 	err := uc.transactionManager.WithinTransaction(func(tx repository.DBTX) error {
 
-		productRepository := uc.repositoryFactory.Product(tx)
 		customerRepository := uc.repositoryFactory.Customer(tx)
 		orderRepository := uc.repositoryFactory.Order(tx)
 
@@ -66,7 +65,6 @@ func (uc *CreateOrderUseCase) Execute(order *domain.Order) error {
 			return err
 		}
 
-		products := make(map[string]*domain.Product)
 		seen := make(map[string]struct{})
 
 		for _, item := range order.Items {
@@ -76,28 +74,8 @@ func (uc *CreateOrderUseCase) Execute(order *domain.Order) error {
 			}
 
 			seen[item.ProductID] = struct{}{}
-		}
 
-		for i := range order.Items {
-
-			product, err := productRepository.FindByID(order.Items[i].ProductID)
-			if err != nil {
-				return err
-			}
-
-			if err := product.ReduceStock(order.Items[i].Quantity); err != nil {
-				return err
-			}
-
-			order.Items[i].Name = product.Name
-			order.Items[i].Price = product.Price
-
-			products[product.ID] = product
-		}
-
-		for _, product := range products {
-
-			if err := productRepository.Update(product); err != nil {
+			if err := item.Validate(); err != nil {
 				return err
 			}
 		}
@@ -113,16 +91,29 @@ func (uc *CreateOrderUseCase) Execute(order *domain.Order) error {
 		return err
 	}
 
-	// A publicação é feita somente depois do commit da transação.
+	// A publicação ocorre somente depois do commit.
 	if uc.eventPublisher != nil {
+
+		items := make([]messaging.StockItem, 0, len(order.Items))
+
+		for _, item := range order.Items {
+			items = append(items, messaging.StockItem{
+				ProductID: item.ProductID,
+				Quantity:  item.Quantity,
+			})
+		}
 
 		event := messaging.Event{
 			MessageID:     uuid.NewString(),
-			EventType:     "OrderCreated",
+			EventType:     "ReserveStock",
 			CorrelationID: uuid.NewString(),
 			SagaID:        uuid.NewString(),
 			OrderID:       order.ID,
 			OccurredAt:    time.Now().UTC(),
+			Data: messaging.ReserveStockData{
+				OrderID: order.ID,
+				Items:   items,
+			},
 		}
 
 		if err := uc.eventPublisher.Publish(

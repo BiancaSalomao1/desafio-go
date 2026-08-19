@@ -26,6 +26,7 @@ type Config struct {
 	JWTExpiresIn string
 	KafkaBrokers string
 	KafkaTopic   string
+	RabbitMQURL  string
 }
 
 func Load() *Config {
@@ -44,5 +45,6 @@ func Load() *Config {
 		JWTExpiresIn: os.Getenv("JWT_EXPIRES_IN"),
 		KafkaBrokers: os.Getenv("KAFKA_BROKERS"),
 		KafkaTopic:   os.Getenv("KAFKA_TOPIC"),
+		RabbitMQURL:  os.Getenv("RABBITMQ_URL"),
 	}
 }

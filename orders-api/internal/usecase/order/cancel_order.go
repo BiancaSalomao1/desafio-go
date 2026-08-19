@@ -1,49 +1,35 @@
 package order
 
-/*
-struct CancelOrderUseCase
-
-Responsabilidades:
-- cancelar pedido;
-- devolver estoque;
-- atualizar pedido;
-- executar toda a operação em uma transação.
-
-Campos:
-- transactionManager
-- repositoryFactory
-
-Métodos:
-- NewCancelOrderUseCase()
-- Execute()
-*/
-
 import (
+	"context"
+
+	"orders-api/internal/messaging"
 	"orders-api/internal/repository"
 )
 
 type CancelOrderUseCase struct {
 	transactionManager repository.TransactionManager
 	repositoryFactory  repository.RepositoryFactory
+	publishers         []messaging.EventPublisher
 }
 
 func NewCancelOrderUseCase(
 	transactionManager repository.TransactionManager,
 	repositoryFactory repository.RepositoryFactory,
+	publishers ...messaging.EventPublisher,
 ) *CancelOrderUseCase {
-
 	return &CancelOrderUseCase{
 		transactionManager: transactionManager,
 		repositoryFactory:  repositoryFactory,
+		publishers:         publishers,
 	}
 }
 
 func (uc *CancelOrderUseCase) Execute(id string) error {
+	var event messaging.Event
 
-	return uc.transactionManager.WithinTransaction(func(tx repository.DBTX) error {
-
+	err := uc.transactionManager.WithinTransaction(func(tx repository.DBTX) error {
 		orderRepository := uc.repositoryFactory.Order(tx)
-		productRepository := uc.repositoryFactory.Product(tx)
 
 		order, err := orderRepository.FindByID(id)
 		if err != nil {
@@ -54,24 +40,41 @@ func (uc *CancelOrderUseCase) Execute(id string) error {
 			return err
 		}
 
-		for _, item := range order.Items {
-
-			product, err := productRepository.FindByID(item.ProductID)
-			if err != nil {
-				return err
-			}
-
-			product.IncreaseStock(item.Quantity)
-
-			if err := productRepository.Update(product); err != nil {
-				return err
-			}
-		}
-
 		if err := orderRepository.Update(order); err != nil {
 			return err
 		}
 
+		items := make([]messaging.StockItem, 0, len(order.Items))
+
+		for _, item := range order.Items {
+			items = append(items, messaging.StockItem{
+				ProductID: item.ProductID,
+				Quantity:  item.Quantity,
+			})
+		}
+
+		event = messaging.Event{
+			EventType: "ReleaseStock",
+			OrderID:   order.ID,
+			Data: struct {
+				Items []messaging.StockItem `json:"items"`
+			}{
+				Items: items,
+			},
+		}
+
 		return nil
 	})
+
+	if err != nil {
+		return err
+	}
+
+	for _, publisher := range uc.publishers {
+		if err := publisher.Publish(context.Background(), event); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

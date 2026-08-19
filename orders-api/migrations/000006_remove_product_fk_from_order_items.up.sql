@@ -1,0 +1,2 @@
+ALTER TABLE order_items
+DROP CONSTRAINT IF EXISTS fk_product;
