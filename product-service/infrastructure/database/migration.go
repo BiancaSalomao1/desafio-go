@@ -3,6 +3,7 @@ package database
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -18,8 +19,10 @@ func RunMigrations(databaseURL string) error {
 	}
 
 	migrations := filepath.Join(root, "migrations")
-
 	sourceURL := fmt.Sprintf("file://%s", migrations)
+
+	log.Printf("migration database: %s", databaseURL)
+	log.Printf("migration source: %s", sourceURL)
 
 	m, err := migrate.New(
 		sourceURL,
@@ -28,6 +31,19 @@ func RunMigrations(databaseURL string) error {
 	if err != nil {
 		return err
 	}
+
+	defer m.Close()
+
+	version, dirty, err := m.Version()
+	if err != nil && !errors.Is(err, migrate.ErrNilVersion) {
+		return fmt.Errorf("read migration version: %w", err)
+	}
+
+	log.Printf(
+		"migration state: version=%d dirty=%t",
+		version,
+		dirty,
+	)
 
 	if err := m.Up(); err != nil &&
 		!errors.Is(err, migrate.ErrNoChange) {
