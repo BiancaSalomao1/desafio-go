@@ -3,29 +3,23 @@ name: Go CI
 on:
   push:
     branches: [main]
-
   pull_request:
     branches: [main]
 
 jobs:
-
   orders-api:
     name: Orders API
     runs-on: ubuntu-latest
 
     services:
-
       postgres:
         image: postgres:17-alpine
-
         env:
           POSTGRES_USER: app
           POSTGRES_PASSWORD: app
           POSTGRES_DB: app
-
         ports:
           - 5433:5432
-
         options: >-
           --health-cmd="pg_isready -U app -d app"
           --health-interval=5s
@@ -33,15 +27,12 @@ jobs:
           --health-retries=10
 
       rabbitmq:
-        image: rabbitmq:3-management
-
+        image: rabbitmq:4-management
         env:
           RABBITMQ_DEFAULT_USER: app
           RABBITMQ_DEFAULT_PASS: app
-
         ports:
           - 5672:5672
-
         options: >-
           --health-cmd="rabbitmq-diagnostics -q ping"
           --health-interval=5s
@@ -60,22 +51,15 @@ jobs:
         working-directory: orders-api
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.26"
-
-      - name: Cache Go Modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-          key: ${{ runner.os }}-orders-go-${{ hashFiles('orders-api/go.sum') }}
+          go-version: "1.26.4"
+          cache: true
+          cache-dependency-path: orders-api/go.sum
 
       - name: Download Dependencies
         run: go mod download
@@ -87,29 +71,27 @@ jobs:
         run: go vet ./...
 
       - name: Tests
-        run: go test -count=1 ./...
+        run: go test ./... -count=1
+
+      - name: Race Tests
+        run: go test ./... -race -count=1
 
       - name: Build
         run: go build ./...
-
 
   product-service:
     name: Product Service
     runs-on: ubuntu-latest
 
     services:
-
       postgres:
         image: postgres:17-alpine
-
         env:
           POSTGRES_USER: product
           POSTGRES_PASSWORD: product
           POSTGRES_DB: products
-
         ports:
           - 5434:5432
-
         options: >-
           --health-cmd="pg_isready -U product -d products"
           --health-interval=5s
@@ -117,15 +99,12 @@ jobs:
           --health-retries=10
 
       rabbitmq:
-        image: rabbitmq:3-management
-
+        image: rabbitmq:4-management
         env:
           RABBITMQ_DEFAULT_USER: app
           RABBITMQ_DEFAULT_PASS: app
-
         ports:
           - 5672:5672
-
         options: >-
           --health-cmd="rabbitmq-diagnostics -q ping"
           --health-interval=5s
@@ -142,22 +121,15 @@ jobs:
         working-directory: product-service
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.26"
-
-      - name: Cache Go Modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-          key: ${{ runner.os }}-product-go-${{ hashFiles('product-service/go.sum') }}
+          go-version: "1.26.4"
+          cache: true
+          cache-dependency-path: product-service/go.sum
 
       - name: Download Dependencies
         run: go mod download
@@ -169,7 +141,10 @@ jobs:
         run: go vet ./...
 
       - name: Tests
-        run: go test -count=1 ./...
+        run: go test ./... -count=1
+
+      - name: Race Tests
+        run: go test ./... -race -count=1
 
       - name: Build
         run: go build ./...
