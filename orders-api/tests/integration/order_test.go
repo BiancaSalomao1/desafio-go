@@ -1,3 +1,5 @@
+package integration
+
 /*
 order_test
 
@@ -32,27 +34,35 @@ Repositories
 
 # PostgreSQL
 
-Regras verificadas:
+Regras verificadas neste pacote:
 
 ✓ cliente obrigatório
-✓ produto obrigatório
+✓ pedido deve possuir itens
 ✓ quantidade válida
-✓ estoque suficiente
-✓ redução de estoque
+✓ produtos duplicados não são permitidos
+✓ transições de estado do pedido
+✓ autenticação JWT
+✓ persistência no PostgreSQL
+
+Observação:
+A validação de existência/estoque do produto pertence ao Product Service
+e é exercida pela Saga por meio de eventos RabbitMQ. Esses cenários não
+devem ser testados como respostas síncronas da Orders API.
 */
-package integration
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sync"
 	"testing"
+	"time"
 
 	customerdto "orders-api/internal/dto/customer"
 	orderdto "orders-api/internal/dto/order"
 	productdto "orders-api/internal/dto/product"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func createOrder(
@@ -85,6 +95,47 @@ func createOrder(
 	return decodeResponse[orderdto.OrderResponse](
 		t,
 		resp.Body,
+	)
+}
+
+func waitForOrderStatus(
+	t *testing.T,
+	ts *TestServer,
+	token string,
+	orderID string,
+	expectedStatus string,
+) {
+	t.Helper()
+
+	assert.Eventually(
+		t,
+		func() bool {
+			req, err := authenticatedRequest(
+				http.MethodGet,
+				ts.Server.URL+"/orders/"+orderID,
+				token,
+				nil,
+			)
+			if err != nil {
+				return false
+			}
+
+			resp := doRequest(t, req)
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				return false
+			}
+
+			order := decodeResponse[orderdto.OrderResponse](
+				t,
+				resp.Body,
+			)
+
+			return order.Status == expectedStatus
+		},
+		5*time.Second,
+		100*time.Millisecond,
 	)
 }
 
@@ -223,46 +274,6 @@ func TestCreateOrderCustomerNotFound(t *testing.T) {
 	assertNotFound(t, resp)
 }
 
-func TestCreateOrderProductNotFound(t *testing.T) {
-
-	ts := setup(t)
-	defer teardown(ts)
-
-	token := createAuthenticatedUser(t, ts)
-
-	customer := createCustomer(
-		t,
-		ts,
-		token,
-		customerdto.CreateCustomerRequest{
-			Name:  "Maria",
-			Email: "maria@email.com",
-		},
-	)
-
-	body := mustMarshal(t, orderdto.CreateOrderRequest{
-		CustomerID: customer.ID,
-		Items: []orderdto.CreateOrderItemRequest{
-			{
-				ProductID: "11111111-1111-1111-1111-111111111111",
-				Quantity:  1,
-			},
-		},
-	})
-
-	req, _ := authenticatedRequest(
-		http.MethodPost,
-		ts.Server.URL+"/orders",
-		token,
-		bytes.NewBuffer(body),
-	)
-
-	resp := doRequest(t, req)
-	defer resp.Body.Close()
-
-	assertNotFound(t, resp)
-}
-
 func TestCreateOrderQuantityZero(t *testing.T) {
 
 	ts := setup(t)
@@ -349,49 +360,6 @@ func TestCreateOrderNegativeQuantity(t *testing.T) {
 	assertBadRequest(t, resp)
 }
 
-func TestCreateOrderInsufficientStock(t *testing.T) {
-
-	ts := setup(t)
-	defer teardown(ts)
-
-	token := createAuthenticatedUser(t, ts)
-
-	customer := createCustomer(t, ts, token,
-		customerdto.CreateCustomerRequest{
-			Name:  "Cliente",
-			Email: "cliente@email.com",
-		})
-
-	product := createProduct(t, ts, token,
-		productdto.CreateProductRequest{
-			Name:  "Monitor",
-			Price: 1500,
-			Stock: 2,
-		})
-
-	body := mustMarshal(t, orderdto.CreateOrderRequest{
-		CustomerID: customer.ID,
-		Items: []orderdto.CreateOrderItemRequest{
-			{
-				ProductID: product.ID,
-				Quantity:  10,
-			},
-		},
-	})
-
-	req, _ := authenticatedRequest(
-		http.MethodPost,
-		ts.Server.URL+"/orders",
-		token,
-		bytes.NewBuffer(body),
-	)
-
-	resp := doRequest(t, req)
-	defer resp.Body.Close()
-
-	assertConflict(t, resp)
-}
-
 func TestCreateOrderMultipleProducts(t *testing.T) {
 
 	ts := setup(t)
@@ -439,61 +407,6 @@ func TestCreateOrderMultipleProducts(t *testing.T) {
 	}
 }
 
-func TestCreateOrderReducesStock(t *testing.T) {
-
-	ts := setup(t)
-	defer teardown(ts)
-
-	token := createAuthenticatedUser(t, ts)
-
-	customer := createCustomer(t, ts, token,
-		customerdto.CreateCustomerRequest{
-			Name:  "José",
-			Email: "jose@email.com",
-		})
-
-	product := createProduct(t, ts, token,
-		productdto.CreateProductRequest{
-			Name:  "SSD",
-			Price: 600,
-			Stock: 10,
-		})
-
-	createOrder(t, ts, token,
-		orderdto.CreateOrderRequest{
-			CustomerID: customer.ID,
-			Items: []orderdto.CreateOrderItemRequest{
-				{
-					ProductID: product.ID,
-					Quantity:  4,
-				},
-			},
-		})
-
-	req, _ := authenticatedRequest(
-		http.MethodGet,
-		ts.Server.URL+"/products/"+product.ID,
-		token,
-		nil,
-	)
-
-	resp := doRequest(t, req)
-	defer resp.Body.Close()
-
-	assertOK(t, resp)
-
-	updated := decodeResponse[productdto.ProductResponse](
-		t,
-		resp.Body,
-	)
-
-	if updated.Stock != 6 {
-		t.Fatalf(
-			"expected stock 6 got %d",
-			updated.Stock,
-		)
-	}
-}
 func TestGetOrderByID(t *testing.T) {
 
 	ts := setup(t)
@@ -1241,273 +1154,6 @@ func TestCancelOrderNotFound(t *testing.T) {
 	assertNotFound(t, resp)
 }
 
-func TestCancelOrderRestoresStock(t *testing.T) {
-
-	ts := setup(t)
-	defer teardown(ts)
-
-	token := createAuthenticatedUser(t, ts)
-
-	customer := createCustomer(t, ts, token,
-		customerdto.CreateCustomerRequest{
-			Name:  "Cliente",
-			Email: "cliente@email.com",
-		})
-
-	product := createProduct(t, ts, token,
-		productdto.CreateProductRequest{
-			Name:  "Notebook",
-			Price: 5000,
-			Stock: 10,
-		})
-
-	order := createOrder(t, ts, token,
-		orderdto.CreateOrderRequest{
-			CustomerID: customer.ID,
-			Items: []orderdto.CreateOrderItemRequest{
-				{
-					ProductID: product.ID,
-					Quantity:  4,
-				},
-			},
-		})
-
-	req, _ := authenticatedRequest(
-		http.MethodPatch,
-		ts.Server.URL+"/orders/"+order.ID+"/cancel",
-		token,
-		nil,
-	)
-
-	resp := doRequest(t, req)
-	resp.Body.Close()
-
-	assertNoContent(t, resp)
-
-	req, _ = authenticatedRequest(
-		http.MethodGet,
-		ts.Server.URL+"/products/"+product.ID,
-		token,
-		nil,
-	)
-
-	resp = doRequest(t, req)
-	defer resp.Body.Close()
-
-	assertOK(t, resp)
-
-	updated := decodeResponse[productdto.ProductResponse](t, resp.Body)
-
-	if updated.Stock != 10 {
-		t.Fatalf("expected stock 10 got %d", updated.Stock)
-	}
-}
-
-func TestPaidOrderDoesNotRestoreStock(t *testing.T) {
-
-	ts := setup(t)
-	defer teardown(ts)
-
-	token := createAuthenticatedUser(t, ts)
-
-	customer := createCustomer(t, ts, token,
-		customerdto.CreateCustomerRequest{
-			Name:  "Cliente",
-			Email: "cliente@email.com",
-		})
-
-	product := createProduct(t, ts, token,
-		productdto.CreateProductRequest{
-			Name:  "Monitor",
-			Price: 2000,
-			Stock: 8,
-		})
-
-	order := createOrder(t, ts, token,
-		orderdto.CreateOrderRequest{
-			CustomerID: customer.ID,
-			Items: []orderdto.CreateOrderItemRequest{
-				{
-					ProductID: product.ID,
-					Quantity:  3,
-				},
-			},
-		})
-
-	req, _ := authenticatedRequest(
-		http.MethodPatch,
-		ts.Server.URL+"/orders/"+order.ID+"/pay",
-		token,
-		nil,
-	)
-
-	resp := doRequest(t, req)
-	resp.Body.Close()
-
-	assertNoContent(t, resp)
-
-	req, _ = authenticatedRequest(
-		http.MethodGet,
-		ts.Server.URL+"/products/"+product.ID,
-		token,
-		nil,
-	)
-
-	resp = doRequest(t, req)
-	defer resp.Body.Close()
-
-	productResponse := decodeResponse[productdto.ProductResponse](t, resp.Body)
-
-	if productResponse.Stock != 5 {
-		t.Fatalf("expected stock 5 got %d", productResponse.Stock)
-	}
-}
-
-func TestCancelOrderRestoresMultipleProducts(t *testing.T) {
-
-	ts := setup(t)
-	defer teardown(ts)
-
-	token := createAuthenticatedUser(t, ts)
-
-	customer := createCustomer(t, ts, token,
-		customerdto.CreateCustomerRequest{
-			Name:  "Cliente",
-			Email: "cliente@email.com",
-		})
-
-	productA := createProduct(t, ts, token,
-		productdto.CreateProductRequest{
-			Name:  "Notebook",
-			Price: 5000,
-			Stock: 10,
-		})
-
-	productB := createProduct(t, ts, token,
-		productdto.CreateProductRequest{
-			Name:  "Mouse",
-			Price: 100,
-			Stock: 20,
-		})
-
-	order := createOrder(t, ts, token,
-		orderdto.CreateOrderRequest{
-			CustomerID: customer.ID,
-			Items: []orderdto.CreateOrderItemRequest{
-				{
-					ProductID: productA.ID,
-					Quantity:  2,
-				},
-				{
-					ProductID: productB.ID,
-					Quantity:  5,
-				},
-			},
-		})
-
-	req, _ := authenticatedRequest(
-		http.MethodPatch,
-		ts.Server.URL+"/orders/"+order.ID+"/cancel",
-		token,
-		nil,
-	)
-
-	resp := doRequest(t, req)
-	resp.Body.Close()
-
-	assertNoContent(t, resp)
-
-	for _, tc := range []struct {
-		id    string
-		stock int
-	}{
-		{productA.ID, 10},
-		{productB.ID, 20},
-	} {
-
-		req, _ = authenticatedRequest(
-			http.MethodGet,
-			ts.Server.URL+"/products/"+tc.id,
-			token,
-			nil,
-		)
-
-		resp = doRequest(t, req)
-
-		product := decodeResponse[productdto.ProductResponse](t, resp.Body)
-		resp.Body.Close()
-
-		if product.Stock != tc.stock {
-			t.Fatalf(
-				"expected stock %d got %d",
-				tc.stock,
-				product.Stock,
-			)
-		}
-	}
-}
-
-func TestStockNeverBecomesNegative(t *testing.T) {
-
-	ts := setup(t)
-	defer teardown(ts)
-
-	token := createAuthenticatedUser(t, ts)
-
-	customer := createCustomer(t, ts, token,
-		customerdto.CreateCustomerRequest{
-			Name:  "Cliente",
-			Email: "cliente@email.com",
-		})
-
-	product := createProduct(t, ts, token,
-		productdto.CreateProductRequest{
-			Name:  "SSD",
-			Price: 500,
-			Stock: 2,
-		})
-
-	body := mustMarshal(t, orderdto.CreateOrderRequest{
-		CustomerID: customer.ID,
-		Items: []orderdto.CreateOrderItemRequest{
-			{
-				ProductID: product.ID,
-				Quantity:  3,
-			},
-		},
-	})
-
-	req, _ := authenticatedRequest(
-		http.MethodPost,
-		ts.Server.URL+"/orders",
-		token,
-		bytes.NewBuffer(body),
-	)
-
-	resp := doRequest(t, req)
-	resp.Body.Close()
-
-	assertConflict(t, resp)
-
-	req, _ = authenticatedRequest(
-		http.MethodGet,
-		ts.Server.URL+"/products/"+product.ID,
-		token,
-		nil,
-	)
-
-	resp = doRequest(t, req)
-	defer resp.Body.Close()
-
-	current := decodeResponse[productdto.ProductResponse](t, resp.Body)
-
-	if current.Stock != 2 {
-		t.Fatalf(
-			"stock should remain 2 got %d",
-			current.Stock,
-		)
-	}
-}
 func TestCreateOrderWithoutToken(t *testing.T) {
 
 	ts := setup(t)
@@ -1776,98 +1422,5 @@ func TestCreateOrderDuplicatedProduct(t *testing.T) {
 			http.StatusConflict,
 			resp.StatusCode,
 		)
-	}
-}
-
-func TestCreateOrderConcurrentStock(t *testing.T) {
-
-	ts := setup(t)
-	defer teardown(ts)
-
-	token := createAuthenticatedUser(t, ts)
-
-	customer := createCustomer(
-		t,
-		ts,
-		token,
-		customerdto.CreateCustomerRequest{
-			Name:     "Cliente Teste",
-			Email:    "cliente@teste.com",
-			Password: "123456",
-		},
-	)
-
-	product := createProduct(
-		t,
-		ts,
-		token,
-		productdto.CreateProductRequest{
-			Name:  "Notebook",
-			Price: 5000,
-			Stock: 5,
-		},
-	)
-	var wg sync.WaitGroup
-
-	statuses := make(chan int, 2)
-
-	create := func() {
-		defer wg.Done()
-
-		request := orderdto.CreateOrderRequest{
-			CustomerID: customer.ID,
-			Items: []orderdto.CreateOrderItemRequest{
-				{
-					ProductID: product.ID,
-					Quantity:  5,
-				},
-			},
-		}
-
-		body, _ := json.Marshal(request)
-
-		req, _ := authenticatedRequest(
-			http.MethodPost,
-			ts.Server.URL+"/orders",
-			token,
-			bytes.NewBuffer(body),
-		)
-
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer resp.Body.Close()
-
-		statuses <- resp.StatusCode
-	}
-
-	wg.Add(2)
-
-	go create()
-	go create()
-
-	wg.Wait()
-	close(statuses)
-
-	var created int
-	var failed int
-
-	for status := range statuses {
-		switch status {
-		case http.StatusCreated:
-			created++
-		default:
-			failed++
-		}
-	}
-
-	if created != 1 {
-		t.Fatalf("expected 1 created order, got %d", created)
-	}
-
-	if failed != 1 {
-		t.Fatalf("expected 1 failed order, got %d", failed)
 	}
 }

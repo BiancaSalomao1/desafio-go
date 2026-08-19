@@ -14,7 +14,7 @@ import (
 const (
 	ExchangeName = "saga.events"
 	ExchangeType = "topic"
-	QueueName    = "product-service.stock"
+	QueueName    = "orders-api.orders"
 )
 
 type Consumer struct {
@@ -59,28 +59,6 @@ func NewConsumer(
 	if err != nil {
 		channel.Close()
 		return nil, fmt.Errorf("declare queue: %w", err)
-	}
-
-	if err := channel.QueueBind(
-		QueueName,
-		"stock.reserve",
-		ExchangeName,
-		false,
-		nil,
-	); err != nil {
-		channel.Close()
-		return nil, fmt.Errorf("bind stock.reserve: %w", err)
-	}
-
-	if err := channel.QueueBind(
-		QueueName,
-		"stock.release",
-		ExchangeName,
-		false,
-		nil,
-	); err != nil {
-		channel.Close()
-		return nil, fmt.Errorf("bind stock.release: %w", err)
 	}
 
 	if err := channel.QueueBind(
