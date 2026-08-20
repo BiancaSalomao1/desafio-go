@@ -39,6 +39,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
       RABBITMQ_URL: amqp://app:app@rabbitmq:5672/
+      REDIS_URL: redis://redis:6379
 
     networks:
       - default

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -21,17 +22,22 @@ func BenchmarkLoginUseCase_Execute(b *testing.B) {
 		),
 	}
 
+	tokenStore := &tokenStoreStub{}
+
 	useCase := NewLoginUseCase(
 		repository,
+		tokenStore,
 		"secret",
 		time.Hour,
 	)
 
+	ctx := context.Background()
+
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-
 		_, _ = useCase.Execute(
+			ctx,
 			"admin@email.com",
 			"123456",
 		)

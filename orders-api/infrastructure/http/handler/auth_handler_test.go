@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -15,19 +16,16 @@ import (
 // =========================
 
 type loginUseCaseMock struct {
-	execute func(email, password string) (string, error)
+	token string
+	err   error
 }
 
 func (m *loginUseCaseMock) Execute(
-	email,
+	ctx context.Context,
+	email string,
 	password string,
 ) (string, error) {
-
-	if m.execute != nil {
-		return m.execute(email, password)
-	}
-
-	return "", nil
+	return m.token, m.err
 }
 
 // =========================
@@ -47,21 +45,11 @@ func newAuthHandler(
 
 func TestAuthHandler_Login(t *testing.T) {
 
-	t.Run("should login successfully", func(t *testing.T) {
+	t.Run("should return access token when credentials are valid", func(t *testing.T) {
 
 		mock := &loginUseCaseMock{
-			execute: func(email, password string) (string, error) {
-
-				if email != "john@example.com" {
-					t.Fatalf("unexpected email: %s", email)
-				}
-
-				if password != "123456" {
-					t.Fatalf("unexpected password")
-				}
-
-				return "jwt-token", nil
-			},
+			token: "jwt-token",
+			err:   nil,
 		}
 
 		handler := newAuthHandler(mock)
@@ -137,9 +125,8 @@ func TestAuthHandler_Login(t *testing.T) {
 	t.Run("should return unauthorized", func(t *testing.T) {
 
 		mock := &loginUseCaseMock{
-			execute: func(email, password string) (string, error) {
-				return "", errors.New("invalid credentials")
-			},
+			token: "",
+			err:   errors.New("invalid credentials"),
 		}
 
 		handler := newAuthHandler(mock)

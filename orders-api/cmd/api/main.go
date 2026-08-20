@@ -25,6 +25,7 @@ import (
 	_ "orders-api/docs"
 
 	"orders-api/config"
+	"orders-api/infrastructure/cache"
 	"orders-api/infrastructure/database"
 	"orders-api/infrastructure/logging"
 	"orders-api/infrastructure/messaging/rabbitmq"
@@ -90,9 +91,26 @@ func main() {
 		return
 	}
 	defer db.Close()
+
+	redisCache, err := cache.New(cfg.RedisURL)
+	if err != nil {
+		slog.Error(
+			"failed to connect to redis",
+			"error", err,
+		)
+		return
+	}
+
+	defer redisCache.Close()
+
+	tokenStore := cache.NewRedisTokenStore(
+		redisCache.Client,
+	)
+
 	httpHandler, orderEventHandler, err := app.NewApplication(
 		cfg,
 		db,
+		tokenStore,
 		rabbitPublisher,
 	)
 

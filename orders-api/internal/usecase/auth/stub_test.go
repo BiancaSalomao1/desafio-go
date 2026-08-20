@@ -9,7 +9,9 @@ Responsabilidades:
 */
 
 import (
+	"context"
 	"orders-api/internal/domain"
+	"time"
 )
 
 type userRepositoryStub struct {
@@ -44,4 +46,30 @@ func (r *userRepositoryStub) FindByEmail(email string) (*domain.User, error) {
 
 func (r *userRepositoryStub) FindAll() ([]*domain.User, error) {
 	return nil, nil
+}
+
+type tokenStoreStub struct {
+	saveError error
+}
+
+func (s *tokenStoreStub) Save(
+	ctx context.Context,
+	token string,
+	ttl time.Duration,
+) error {
+	return s.saveError
+}
+
+func (s *tokenStoreStub) Exists(
+	ctx context.Context,
+	token string,
+) (bool, error) {
+	return true, nil
+}
+
+func (s *tokenStoreStub) Delete(
+	ctx context.Context,
+	token string,
+) error {
+	return nil
 }

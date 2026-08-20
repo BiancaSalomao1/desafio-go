@@ -27,6 +27,7 @@ type Config struct {
 	KafkaBrokers string
 	KafkaTopic   string
 	RabbitMQURL  string
+	RedisURL     string
 }
 
 func Load() *Config {
@@ -46,5 +47,6 @@ func Load() *Config {
 		KafkaBrokers: os.Getenv("KAFKA_BROKERS"),
 		KafkaTopic:   os.Getenv("KAFKA_TOPIC"),
 		RabbitMQURL:  os.Getenv("RABBITMQ_URL"),
+		RedisURL:     os.Getenv("REDIS_URL"),
 	}
 }

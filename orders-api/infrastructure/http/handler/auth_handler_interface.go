@@ -1,5 +1,7 @@
 package handler
 
+import "context"
+
 /*
 interface LoginUseCase
 
@@ -12,6 +14,7 @@ Métodos:
 
 type LoginUseCase interface {
 	Execute(
+		ctx context.Context,
 		email string,
 		password string,
 	) (string, error)

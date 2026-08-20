@@ -59,6 +59,7 @@ import (
 	"orders-api/infrastructure/database"
 	"orders-api/infrastructure/messaging/rabbitmq"
 	app "orders-api/internal/app"
+	"orders-api/internal/security"
 )
 
 type TestServer struct {
@@ -110,13 +111,16 @@ func setup(t *testing.T) *TestServer {
 
 		t.Fatalf("error creating RabbitMQ publisher: %v", err)
 	}
+	tokenStore := security.NewMemoryTokenStore()
 
 	// Monta a aplicação e obtém o handler de eventos da Saga.
 	httpHandler, orderEventHandler, err := app.NewApplication(
 		cfg,
 		db,
+		tokenStore,
 		publisher,
 	)
+
 	if err != nil {
 		publisher.Close()
 		rabbitConn.Close()

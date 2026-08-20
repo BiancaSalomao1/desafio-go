@@ -5,23 +5,25 @@ struct LoginUseCase
 
 Responsabilidades:
 - autenticar usuário;
-- gerar JWT.
+- gerar JWT;
+- registrar token ativo.
 
 Métodos:
 - Execute()
 */
 
 import (
+	"context"
 	"time"
 
 	"orders-api/internal/domain"
-	"orders-api/internal/security"
-
 	"orders-api/internal/repository"
+	"orders-api/internal/security"
 )
 
 type LoginUseCase struct {
 	userRepository repository.UserRepository
+	tokenStore     security.TokenStore
 
 	jwtSecret string
 	jwtTTL    time.Duration
@@ -29,18 +31,20 @@ type LoginUseCase struct {
 
 func NewLoginUseCase(
 	userRepository repository.UserRepository,
+	tokenStore security.TokenStore,
 	jwtSecret string,
 	jwtTTL time.Duration,
 ) *LoginUseCase {
-
 	return &LoginUseCase{
 		userRepository: userRepository,
+		tokenStore:     tokenStore,
 		jwtSecret:      jwtSecret,
 		jwtTTL:         jwtTTL,
 	}
 }
 
 func (uc *LoginUseCase) Execute(
+	ctx context.Context,
 	email string,
 	password string,
 ) (string, error) {
@@ -60,8 +64,15 @@ func (uc *LoginUseCase) Execute(
 		uc.jwtSecret,
 		uc.jwtTTL,
 	)
-
 	if err != nil {
+		return "", err
+	}
+
+	if err := uc.tokenStore.Save(
+		ctx,
+		token,
+		uc.jwtTTL,
+	); err != nil {
 		return "", err
 	}
 

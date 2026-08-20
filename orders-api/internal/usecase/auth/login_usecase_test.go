@@ -1,22 +1,7 @@
 package auth
 
-/*
-Testes do LoginUseCase.
-
-Responsabilidades:
-- validar autenticação;
-- validar credenciais;
-- validar interação com o repositório.
-
-Cenários:
-- login realizado com sucesso;
-- usuário não encontrado;
-- senha inválida;
-- chamada do FindByEmail();
-- validação do Mock.
-*/
-
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -48,13 +33,17 @@ func TestLoginUseCase_Execute(t *testing.T) {
 			user: newUser(),
 		}
 
+		tokenStore := &tokenStoreStub{}
+
 		useCase := NewLoginUseCase(
 			repository,
+			tokenStore,
 			"secret",
 			time.Hour,
 		)
 
 		token, err := useCase.Execute(
+			context.Background(),
 			"admin@email.com",
 			"123456",
 		)
@@ -74,13 +63,17 @@ func TestLoginUseCase_Execute(t *testing.T) {
 			findByEmailError: errors.New("user not found"),
 		}
 
+		tokenStore := &tokenStoreStub{}
+
 		useCase := NewLoginUseCase(
 			repository,
+			tokenStore,
 			"secret",
 			time.Hour,
 		)
 
 		_, err := useCase.Execute(
+			context.Background(),
 			"admin@email.com",
 			"123456",
 		)
@@ -100,13 +93,17 @@ func TestLoginUseCase_Execute(t *testing.T) {
 			user: newUser(),
 		}
 
+		tokenStore := &tokenStoreStub{}
+
 		useCase := NewLoginUseCase(
 			repository,
+			tokenStore,
 			"secret",
 			time.Hour,
 		)
 
 		_, err := useCase.Execute(
+			context.Background(),
 			"admin@email.com",
 			"wrong-password",
 		)
@@ -126,13 +123,17 @@ func TestLoginUseCase_Execute(t *testing.T) {
 			user: newUser(),
 		}
 
+		tokenStore := &tokenStoreStub{}
+
 		useCase := NewLoginUseCase(
 			repository,
+			tokenStore,
 			"secret",
 			time.Hour,
 		)
 
 		_, err := useCase.Execute(
+			context.Background(),
 			"admin@email.com",
 			"123456",
 		)
@@ -167,13 +168,17 @@ func TestLoginUseCase_Execute(t *testing.T) {
 			user:          newUser(),
 		}
 
+		tokenStore := &tokenStoreStub{}
+
 		useCase := NewLoginUseCase(
 			repository,
+			tokenStore,
 			"secret",
 			time.Hour,
 		)
 
 		_, err := useCase.Execute(
+			context.Background(),
 			"admin@email.com",
 			"123456",
 		)

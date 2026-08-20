@@ -54,6 +54,7 @@ import (
 
 	"orders-api/infrastructure/messaging/rabbitmq"
 	"orders-api/internal/messaging"
+	"orders-api/internal/security"
 )
 
 // NewApplication monta toda a aplicação e retorna o handler HTTP
@@ -61,11 +62,11 @@ import (
 func NewApplication(
 	cfg *config.Config,
 	db *database.Database,
+	tokenStore security.TokenStore,
 	publishers ...messaging.EventPublisher,
 ) (http.Handler, *rabbitmq.OrderEventHandler, error) {
 
 	transactionManager := database.NewTransactionManager(db.Pool)
-
 	repositoryFactory := postgres.NewRepositoryFactory()
 
 	productRepository := repositoryFactory.Product(db.Pool)
@@ -129,6 +130,7 @@ func NewApplication(
 
 	loginUseCase := authusecase.NewLoginUseCase(
 		userRepository,
+		tokenStore,
 		cfg.JWTSecret,
 		jwtTTL,
 	)
@@ -188,4 +190,5 @@ func NewApplication(
 	)
 
 	return httpHandler, orderEventHandler, nil
+
 }

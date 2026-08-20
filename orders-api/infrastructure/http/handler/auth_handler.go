@@ -62,6 +62,7 @@ func (h *AuthHandler) Login(
 	}
 
 	token, err := h.loginUseCase.Execute(
+		r.Context(),
 		request.Email,
 		request.Password,
 	)
