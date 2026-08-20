@@ -169,12 +169,15 @@ func NewApplication(
 		cancelOrder,
 	)
 
+	healthHandler := handler.NewHealthHandler()
+
 	router := routes.NewRouter(
 		productHandler,
 		customerHandler,
 		userHandler,
 		orderHandler,
 		authHandler,
+		healthHandler,
 		cfg.JWTSecret,
 	)
 

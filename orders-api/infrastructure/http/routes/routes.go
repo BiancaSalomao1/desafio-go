@@ -29,6 +29,7 @@ func NewRouter(
 	userHandler *handler.UserHandler,
 	orderHandler *handler.OrderHandler,
 	authHandler *handler.AuthHandler,
+	healthHandler *handler.HealthHandler,
 	jwtSecret string,
 ) *http.ServeMux {
 
@@ -45,9 +46,8 @@ func NewRouter(
 	// ==========================
 
 	mux.HandleFunc("POST /login", authHandler.Login)
-
-	// Permite criar o primeiro usuário
 	mux.HandleFunc("POST /users", userHandler.Create)
+	mux.HandleFunc("GET /health", healthHandler.Health)
 
 	// ==========================
 	// Produtos
