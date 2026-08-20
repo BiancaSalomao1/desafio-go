@@ -28,15 +28,30 @@ func (m *loginUseCaseMock) Execute(
 	return m.token, m.err
 }
 
+type logoutUseCaseMock struct {
+	err error
+}
+
+func (m *logoutUseCaseMock) Execute(
+	ctx context.Context,
+	token string,
+) error {
+	return m.err
+}
+
 // =========================
 // Helper
 // =========================
 
 func newAuthHandler(
-	login LoginUseCase,
+	loginUseCase LoginUseCase,
+	logoutUseCase LogoutUseCase,
 ) *AuthHandler {
 
-	return NewAuthHandler(login)
+	return NewAuthHandler(
+		loginUseCase,
+		logoutUseCase,
+	)
 }
 
 // =========================
@@ -52,7 +67,7 @@ func TestAuthHandler_Login(t *testing.T) {
 			err:   nil,
 		}
 
-		handler := newAuthHandler(mock)
+		handler := newAuthHandler(mock, nil)
 
 		requestBody := authdto.LoginRequest{
 			Email:    "john@example.com",
@@ -92,8 +107,7 @@ func TestAuthHandler_Login(t *testing.T) {
 	})
 
 	t.Run("should return bad request when body is invalid", func(t *testing.T) {
-
-		handler := newAuthHandler(&loginUseCaseMock{})
+		handler := newAuthHandler(&loginUseCaseMock{}, nil)
 
 		req := httptest.NewRequest(
 			http.MethodPost,
@@ -129,7 +143,7 @@ func TestAuthHandler_Login(t *testing.T) {
 			err:   errors.New("invalid credentials"),
 		}
 
-		handler := newAuthHandler(mock)
+		handler := newAuthHandler(mock, nil)
 
 		requestBody := authdto.LoginRequest{
 			Email:    "john@example.com",
@@ -159,6 +173,101 @@ func TestAuthHandler_Login(t *testing.T) {
 			t,
 			rec,
 			"invalid credentials",
+		)
+	})
+}
+func TestAuthHandler_Logout(t *testing.T) {
+
+	t.Run("should logout successfully", func(t *testing.T) {
+
+		handler := newAuthHandler(
+			&loginUseCaseMock{},
+			&logoutUseCaseMock{},
+		)
+
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/logout",
+			nil,
+		)
+
+		req.Header.Set(
+			"Authorization",
+			"Bearer jwt-token",
+		)
+
+		rec := httptest.NewRecorder()
+
+		handler.Logout(
+			rec,
+			req,
+		)
+
+		testutil.AssertStatus(
+			t,
+			rec,
+			http.StatusNoContent,
+		)
+	})
+
+	t.Run("should return unauthorized when authorization header is invalid", func(t *testing.T) {
+
+		handler := newAuthHandler(
+			&loginUseCaseMock{},
+			&logoutUseCaseMock{},
+		)
+
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/logout",
+			nil,
+		)
+
+		rec := httptest.NewRecorder()
+
+		handler.Logout(
+			rec,
+			req,
+		)
+
+		testutil.AssertStatus(
+			t,
+			rec,
+			http.StatusUnauthorized,
+		)
+	})
+
+	t.Run("should return internal server error when logout fails", func(t *testing.T) {
+
+		handler := newAuthHandler(
+			&loginUseCaseMock{},
+			&logoutUseCaseMock{
+				err: errors.New("failed to delete token"),
+			},
+		)
+
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/logout",
+			nil,
+		)
+
+		req.Header.Set(
+			"Authorization",
+			"Bearer jwt-token",
+		)
+
+		rec := httptest.NewRecorder()
+
+		handler.Logout(
+			rec,
+			req,
+		)
+
+		testutil.AssertStatus(
+			t,
+			rec,
+			http.StatusInternalServerError,
 		)
 	})
 }

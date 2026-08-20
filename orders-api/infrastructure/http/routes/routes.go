@@ -16,6 +16,7 @@ import (
 	"net/http"
 
 	_ "orders-api/docs"
+	"orders-api/internal/security"
 
 	"orders-api/infrastructure/http/handler"
 	"orders-api/infrastructure/http/middleware"
@@ -31,6 +32,7 @@ func NewRouter(
 	authHandler *handler.AuthHandler,
 	healthHandler *handler.HealthHandler,
 	jwtSecret string,
+	tokenStore security.TokenStore,
 ) *http.ServeMux {
 
 	mux := http.NewServeMux()
@@ -39,7 +41,10 @@ func NewRouter(
 	mux.Handle("/swagger/", httpSwagger.WrapHandler)
 
 	// Middleware JWT
-	auth := middleware.Auth(jwtSecret)
+	auth := middleware.Auth(
+		jwtSecret,
+		tokenStore,
+	)
 
 	// ==========================
 	// Rotas Públicas
@@ -103,6 +108,9 @@ func NewRouter(
 	mux.Handle("DELETE /users/{id}",
 		auth(http.HandlerFunc(userHandler.Delete)))
 
+	mux.Handle("POST /logout",
+		auth(http.HandlerFunc(authHandler.Logout)),
+	)
 	// ==========================
 	// Pedidos
 	// ==========================

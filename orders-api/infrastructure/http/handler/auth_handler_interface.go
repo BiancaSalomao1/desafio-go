@@ -19,3 +19,10 @@ type LoginUseCase interface {
 		password string,
 	) (string, error)
 }
+
+type LogoutUseCase interface {
+	Execute(
+		ctx context.Context,
+		token string,
+	) error
+}

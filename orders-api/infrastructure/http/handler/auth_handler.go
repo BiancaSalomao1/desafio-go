@@ -8,10 +8,13 @@ Responsabilidades:
 
 Métodos:
 - Login()
+- Logout()
 */
 
 import (
+	"errors"
 	"net/http"
+	"strings"
 
 	"orders-api/infrastructure/http/httpx"
 
@@ -19,30 +22,22 @@ import (
 )
 
 type AuthHandler struct {
-	loginUseCase LoginUseCase
+	loginUseCase  LoginUseCase
+	logoutUseCase LogoutUseCase
 }
 
 func NewAuthHandler(
 	loginUseCase LoginUseCase,
+	logoutUseCase LogoutUseCase,
+
 ) *AuthHandler {
 
 	return &AuthHandler{
-		loginUseCase: loginUseCase,
+		loginUseCase:  loginUseCase,
+		logoutUseCase: logoutUseCase,
 	}
 }
 
-// Login
-//
-// @Summary Login
-// @Description Autentica um usuário e retorna um JWT.
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param request body auth.LoginRequest true "Credenciais"
-// @Success 200 {object} auth.LoginResponse
-// @Failure 400 {object} httpx.ErrorResponse
-// @Failure 401 {object} httpx.ErrorResponse
-// @Router /login [post]
 func (h *AuthHandler) Login(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -85,4 +80,45 @@ func (h *AuthHandler) Login(
 			AccessToken: token,
 		},
 	)
+}
+
+func (h *AuthHandler) Logout(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+
+	header := r.Header.Get("Authorization")
+
+	if !strings.HasPrefix(
+		header,
+		"Bearer ",
+	) {
+		httpx.WriteError(
+			w,
+			http.StatusUnauthorized,
+			errors.New("invalid authorization header"),
+		)
+		return
+	}
+
+	token := strings.TrimPrefix(
+		header,
+		"Bearer ",
+	)
+
+	if err := h.logoutUseCase.Execute(
+		r.Context(),
+		token,
+	); err != nil {
+
+		httpx.WriteError(
+			w,
+			http.StatusInternalServerError,
+			err,
+		)
+
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

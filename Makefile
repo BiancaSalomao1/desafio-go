@@ -19,28 +19,28 @@ endif
 # ==========================
 
 run:
-	go run ./cmd/api
+	cd orders-api && go run ./cmd/api
 
 build:
-	go build ./...
+	cd orders-api && go build ./...
 
 fmt:
-	gofmt -w .
+	cd orders-api && gofmt -w .
 
 fmt-check:
-	test -z "$$(gofmt -l .)"
-	
+	cd orders-api && test -z "$$(gofmt -l .)"
+
 vet:
-	go vet ./...
+	cd orders-api && go vet ./...
 
 test:
-	go test ./...
+	cd orders-api && go test ./...
 
 tidy:
-	go mod tidy
+	cd orders-api && go mod tidy
 
 clean:
-	go clean
+	cd orders-api && go clean
 
 check:
 	$(MAKE) fmt-check

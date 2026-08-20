@@ -51,6 +51,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http/httptest"
+	"sync"
 	"testing"
 
 	"github.com/joho/godotenv"
@@ -70,6 +71,8 @@ type TestServer struct {
 	Publisher  *rabbitmq.Publisher
 	Consumer   *rabbitmq.Consumer
 	Cancel     context.CancelFunc
+
+	ConsumerWG *sync.WaitGroup
 }
 
 func setup(t *testing.T) *TestServer {
@@ -145,12 +148,17 @@ func setup(t *testing.T) *TestServer {
 	// Inicia o consumer da Saga.
 	ctx, cancel := context.WithCancel(context.Background())
 
+	consumerWG := &sync.WaitGroup{}
+
+	consumerWG.Add(1)
+
 	go func() {
+		defer consumerWG.Done()
+
 		if err := consumer.Consume(
 			ctx,
 			orderEventHandler.Handle,
 		); err != nil {
-			// O cancelamento normal do contexto não é erro de teste.
 			if ctx.Err() == nil {
 				slog.Error(
 					"test RabbitMQ consumer stopped",
@@ -159,7 +167,6 @@ func setup(t *testing.T) *TestServer {
 			}
 		}
 	}()
-
 	server := httptest.NewServer(httpHandler)
 
 	return &TestServer{
@@ -170,6 +177,7 @@ func setup(t *testing.T) *TestServer {
 		Publisher:  publisher,
 		Consumer:   consumer,
 		Cancel:     cancel,
+		ConsumerWG: consumerWG,
 	}
 }
 
@@ -178,9 +186,14 @@ func teardown(ts *TestServer) {
 		return
 	}
 
-	// Para primeiro o consumer.
+	// Solicita o encerramento do consumer.
 	if ts.Cancel != nil {
 		ts.Cancel()
+	}
+
+	// Aguarda a goroutine do consumer terminar.
+	if ts.ConsumerWG != nil {
+		ts.ConsumerWG.Wait()
 	}
 
 	if ts.Server != nil {

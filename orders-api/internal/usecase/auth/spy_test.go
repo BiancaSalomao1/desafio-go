@@ -10,7 +10,9 @@ Responsabilidades:
 */
 
 import (
+	"context"
 	"orders-api/internal/domain"
+	"time"
 )
 
 type userRepositorySpy struct {
@@ -48,4 +50,38 @@ func (r *userRepositorySpy) FindByEmail(email string) (*domain.User, error) {
 
 func (r *userRepositorySpy) FindAll() ([]*domain.User, error) {
 	return nil, nil
+}
+
+type tokenStoreSpy struct {
+	deleteCalled bool
+	deleteCalls  int
+	token        string
+
+	deleteError error
+}
+
+func (s *tokenStoreSpy) Save(
+	ctx context.Context,
+	token string,
+	ttl time.Duration,
+) error {
+	return nil
+}
+
+func (s *tokenStoreSpy) Exists(
+	ctx context.Context,
+	token string,
+) (bool, error) {
+	return true, nil
+}
+
+func (s *tokenStoreSpy) Delete(
+	ctx context.Context,
+	token string,
+) error {
+	s.deleteCalled = true
+	s.deleteCalls++
+	s.token = token
+
+	return s.deleteError
 }

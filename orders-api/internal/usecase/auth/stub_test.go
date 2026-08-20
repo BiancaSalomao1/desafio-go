@@ -49,7 +49,8 @@ func (r *userRepositoryStub) FindAll() ([]*domain.User, error) {
 }
 
 type tokenStoreStub struct {
-	saveError error
+	saveError   error
+	deleteError error
 }
 
 func (s *tokenStoreStub) Save(
@@ -71,5 +72,5 @@ func (s *tokenStoreStub) Delete(
 	ctx context.Context,
 	token string,
 ) error {
-	return nil
+	return s.deleteError
 }

@@ -1,17 +1,5 @@
 package middleware
 
-/*
-Middleware Auth
-
-Responsabilidades:
-- validar Bearer Token;
-- validar JWT;
-- armazenar usuário no Context.
-
-Métodos:
-- Auth()
-*/
-
 import (
 	"context"
 	"net/http"
@@ -29,6 +17,7 @@ const (
 
 func Auth(
 	jwtSecret string,
+	tokenStore security.TokenStore,
 ) func(http.Handler) http.Handler {
 
 	return func(next http.Handler) http.Handler {
@@ -77,6 +66,33 @@ func Auth(
 				http.Error(
 					w,
 					"invalid token",
+					http.StatusUnauthorized,
+				)
+
+				return
+			}
+
+			exists, err := tokenStore.Exists(
+				r.Context(),
+				token,
+			)
+
+			if err != nil {
+
+				http.Error(
+					w,
+					"failed to validate token",
+					http.StatusInternalServerError,
+				)
+
+				return
+			}
+
+			if !exists {
+
+				http.Error(
+					w,
+					"token is no longer active",
 					http.StatusUnauthorized,
 				)
 

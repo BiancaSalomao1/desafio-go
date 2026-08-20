@@ -135,8 +135,13 @@ func NewApplication(
 		jwtTTL,
 	)
 
+	logoutUseCase := authusecase.NewLogoutUseCase(
+		tokenStore,
+	)
+
 	authHandler := handler.NewAuthHandler(
 		loginUseCase,
+		logoutUseCase,
 	)
 
 	productHandler := handler.NewProductHandler(
@@ -181,6 +186,7 @@ func NewApplication(
 		authHandler,
 		healthHandler,
 		cfg.JWTSecret,
+		tokenStore,
 	)
 
 	httpHandler := middleware.Recovery(

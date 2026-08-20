@@ -96,3 +96,121 @@ func createAuthenticatedUser(
 
 	return response.AccessToken
 }
+
+func TestAuthIntegration_LogoutInvalidatesToken(
+	t *testing.T,
+) {
+	ts := setup(t)
+	defer teardown(ts)
+
+	// =========================
+	// Login
+	// =========================
+
+	token := createAuthenticatedUser(
+		t,
+		ts,
+	)
+
+	// =========================
+	// Token ativo
+	// =========================
+
+	req, err := authenticatedRequest(
+		http.MethodGet,
+		ts.Server.URL+"/products",
+		token,
+		nil,
+	)
+	if err != nil {
+		t.Fatalf(
+			"create authenticated request: %v",
+			err,
+		)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf(
+			"execute authenticated request: %v",
+			err,
+		)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf(
+			"expected status %d before logout, got %d",
+			http.StatusOK,
+			resp.StatusCode,
+		)
+	}
+
+	// =========================
+	// Logout
+	// =========================
+
+	req, err = authenticatedRequest(
+		http.MethodPost,
+		ts.Server.URL+"/logout",
+		token,
+		nil,
+	)
+	if err != nil {
+		t.Fatalf(
+			"create logout request: %v",
+			err,
+		)
+	}
+
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf(
+			"execute logout request: %v",
+			err,
+		)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		t.Fatalf(
+			"expected status %d on logout, got %d",
+			http.StatusNoContent,
+			resp.StatusCode,
+		)
+	}
+
+	// =========================
+	// Mesmo token após logout
+	// =========================
+
+	req, err = authenticatedRequest(
+		http.MethodGet,
+		ts.Server.URL+"/products",
+		token,
+		nil,
+	)
+	if err != nil {
+		t.Fatalf(
+			"create request after logout: %v",
+			err,
+		)
+	}
+
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf(
+			"execute request after logout: %v",
+			err,
+		)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf(
+			"expected status %d after logout, got %d",
+			http.StatusUnauthorized,
+			resp.StatusCode,
+		)
+	}
+}
